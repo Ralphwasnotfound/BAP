@@ -6,26 +6,32 @@
     <!-- ------------------------- -->
     <div v-if="!session" class="flex justify-center mt-20">
       <div class="bg-white p-6 rounded-lg shadow w-full max-w-sm">
-
         <h2 class="text-2xl font-bold text-center mb-6">Admin Login</h2>
 
-        <input v-model="email" type="email"
+        <input
+          v-model="email"
+          type="email"
           placeholder="Email"
-          class="w-full border rounded px-3 py-2 mb-3" />
+          class="w-full border rounded px-3 py-2 mb-3"
+        />
 
-        <input v-model="password" type="password"
+        <input
+          v-model="password"
+          type="password"
           placeholder="Password"
-          class="w-full border rounded px-3 py-2 mb-4" />
+          class="w-full border rounded px-3 py-2 mb-4"
+        />
 
-        <button @click="login"
-          class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        <button
+          @click="login"
+          class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+        >
           Login
         </button>
 
         <p v-if="errorMessage" class="mt-4 text-red-600 text-center">
           {{ errorMessage }}
         </p>
-
       </div>
     </div>
 
@@ -36,38 +42,44 @@
 
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">Admin Dashboard</h1>
+
         <button
           class="px-4 py-2 bg-red-600 text-white rounded"
-          @click="logout">
+          @click="logout"
+        >
           Logout
         </button>
       </div>
 
-      <!-- ADD BUTTONS -->
+      <!-- ACTION BUTTONS -->
       <div class="flex gap-3 mb-4">
-
-        <button
-          class="px-4 py-2 bg-blue-600 text-white rounded"
-          @click="openAddModal">
+        <button class="px-4 py-2 bg-blue-600 text-white rounded" @click="openAddModal">
           + Add Person
         </button>
 
-        <!-- CSV -->
-        <button
-          class="px-4 py-2 bg-green-600 text-white rounded"
-          @click="exportCSV">
+        <button class="px-4 py-2 bg-green-600 text-white rounded" @click="exportCSV">
           Export CSV
         </button>
 
-        <!-- Excel -->
-        <button
-          class="px-4 py-2 bg-yellow-500 text-white rounded"
-          @click="exportExcel">
+        <button class="px-4 py-2 bg-yellow-500 text-white rounded" @click="exportExcel">
           Export Excel
+        </button>
+
+        <button class="px-4 py-2 bg-purple-600 text-white rounded" @click="openAnnouncementModal">
+          + Add Announcement
         </button>
       </div>
 
-      <!-- TABLE -->
+      <!-- ANNOUNCEMENT MODAL -->
+      <AnnouncementModal
+        :show="showAnnouncementModal"
+        :isEditing="isEditingAnnouncement"
+        :form="announcementForm"
+        @close="closeAnnouncementModal"
+        @submit="handleAnnouncementSubmit"
+      />
+
+      <!-- PEOPLE TABLE -->
       <table class="w-full border text-left">
         <thead class="bg-gray-100">
           <tr>
@@ -101,31 +113,37 @@
             <td class="p-2 border text-center">
               <button
                 class="px-2 py-1 bg-yellow-500 text-white rounded mr-2"
-                @click="openEditModal(p)">Edit</button>
+                @click="openEditModal(p)"
+              >
+                Edit
+              </button>
 
               <button
                 class="px-2 py-1 bg-red-600 text-white rounded"
-                @click="openDeleteModal(p)">Delete</button>
+                @click="openDeleteModal(p)"
+              >
+                Delete
+              </button>
             </td>
-
           </tr>
         </tbody>
       </table>
 
-    <AddPersonelModal
+      <!-- PERSON MODALS -->
+      <AddPersonelModal
         :show="showModal"
         :isEditing="isEditing"
         :form="form"
         @close="closeModal"
         @submit="handleModalSubmit"
-    />
+      />
 
-    <DeleteConfirm
+      <DeleteConfirm
         :show="showDeleteModal"
         :person="selectedPerson"
         @close="showDeleteModal = false"
         @confirm="deletePerson"
-    />
+      />
 
     </div>
   </div>
@@ -134,19 +152,34 @@
 <script>
 import AddPersonelModal from '~/components/AddPersonelModal.vue';
 import DeleteConfirm from '~/components/DeleteConfirm.vue';
+import AnnouncementModal from '~/components/Announcement/AnnouncementModal.vue';
 
 export default {
-    components: {
-        AddPersonelModal,
-        DeleteConfirm
-    },
+  components: {
+    AnnouncementModal,
+    AddPersonelModal,
+    DeleteConfirm
+  },
+
   data() {
     return {
+      /* ANNOUNCEMENTS */
+      showAnnouncementModal: false,
+      isEditingAnnouncement: false,
+      announcementForm: {
+        title: "",
+        content: "",
+        image_url: ""
+      },
+      announcementPhotoFile: null,
+
+      /* AUTH */
       email: "",
       password: "",
       errorMessage: "",
       session: null,
 
+      /* PEOPLE */
       people: [],
       showModal: false,
       showDeleteModal: false,
@@ -180,6 +213,69 @@ export default {
 
   methods: {
     /* ------------------------------  
+       ANNOUNCEMENTS  
+    ------------------------------ */
+    openAnnouncementModal() {
+      this.isEditingAnnouncement = false;
+      this.announcementForm = { title: "", content: "", image_url: "" };
+      this.announcementPhotoFile = null;
+      this.showAnnouncementModal = true;
+    },
+
+    closeAnnouncementModal() {
+      this.showAnnouncementModal = false;
+    },
+
+    async uploadAnnouncementImage() {
+      if (!this.announcementPhotoFile) return null;
+
+      const safeName = this.announcementPhotoFile.name
+        .replace(/\s+/g, "_")
+        .replace(/[^\w.-]/g, "");
+
+      const fileName = `${Date.now()}-${safeName}`;
+
+      const { error } = await this.$supabase.storage
+        .from("announcement_images")
+        .upload(fileName, this.announcementPhotoFile, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: this.announcementPhotoFile.type
+        });
+
+      if (error) return null;
+
+      const { data: urlData } = this.$supabase.storage
+        .from("announcement_images")
+        .getPublicUrl(fileName);
+
+      return urlData.publicUrl;
+    },
+
+    async addAnnouncement() {
+      const imageUrl = await this.uploadAnnouncementImage();
+
+      const payload = {
+        ...this.announcementForm,
+        image_url: imageUrl || null
+      };
+
+      await this.$supabase.from("announcements").insert([payload]);
+      this.closeAnnouncementModal();
+    },
+
+    async handleAnnouncementSubmit({ form, photoFile }) {
+      this.announcementForm = form;
+      this.announcementPhotoFile = photoFile;
+
+      if (this.isEditingAnnouncement) {
+        // (Edit coming soon)
+      } else {
+        await this.addAnnouncement();
+      }
+    },
+
+    /* ------------------------------  
        AUTH  
     ------------------------------ */
     async login() {
@@ -204,7 +300,7 @@ export default {
     },
 
     /* ------------------------------  
-       CRUD  
+       PEOPLE CRUD  
     ------------------------------ */
     async loadPeople() {
       const { data } = await this.$supabase.from("people").select("*");
@@ -247,71 +343,64 @@ export default {
       this.photoFile = null;
     },
 
-    /* ------------------------------  
-       UPLOAD PHOTO  
-    ------------------------------ */
+    /* PHOTO UPLOAD */
     handlePhoto(e) {
       this.photoFile = e.target.files[0];
     },
 
     async uploadPhoto() {
-        if (!this.photoFile) return null;
+      if (!this.photoFile) return null;
 
-    const safeName = this.photoFile.name
+      const safeName = this.photoFile.name
         .replace(/\s+/g, "_")
         .replace(/[^\w.-]/g, "");
 
-    const fileName = `${Date.now()}-${safeName}`;
+      const fileName = `${Date.now()}-${safeName}`;
 
-    const { error } = await this.$supabase.storage
-    .from("people_photos")
-    .upload(fileName, this.photoFile, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: this.photoFile.type
-    });
+      const { error } = await this.$supabase.storage
+        .from("people_photos")
+        .upload(fileName, this.photoFile, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: this.photoFile.type
+        });
 
-    if (error) {
-        console.error("UPLOAD ERROR:", error);
-        return null;
-    }
+      if (error) return null;
 
-    const { data: urlData } = this.$supabase.storage
+      const { data: urlData } = this.$supabase.storage
         .from("people_photos")
         .getPublicUrl(fileName);
 
-    return urlData.publicUrl;
-},
+      return urlData.publicUrl;
+    },
 
-
-    /* ------------------------------  
-       CREATE  
-    ------------------------------ */
+    /* CREATE PERSON */
     async addPerson() {
       const photoUrl = await this.uploadPhoto();
 
-      const payload = { ...this.form };
-      if (payload.expiry_date === "") payload.expiry_date = null;
-      if (payload.valid_until === "") payload.valid_until = null;
-      if (photoUrl) payload.picture_url = photoUrl;
+      const payload = {
+        ...this.form,
+        expiry_date: this.form.expiry_date || null,
+        valid_until: this.form.valid_until || null,
+        picture_url: photoUrl || this.form.picture_url
+      };
 
-      const { error } = await this.$supabase.from("people").insert([payload]);
-      if (error) console.error(error);
+      await this.$supabase.from("people").insert([payload]);
 
       this.closeModal();
       this.loadPeople();
     },
 
-    /* ------------------------------  
-       UPDATE  
-    ------------------------------ */
+    /* UPDATE PERSON */
     async updatePerson() {
       const photoUrl = await this.uploadPhoto();
 
-      const payload = { ...this.form };
-      if (payload.expiry_date === "") payload.expiry_date = null;
-      if (payload.valid_until === "") payload.valid_until = null;
-      if (photoUrl) payload.picture_url = photoUrl;
+      const payload = {
+        ...this.form,
+        expiry_date: this.form.expiry_date || null,
+        valid_until: this.form.valid_until || null,
+        picture_url: photoUrl || this.form.picture_url
+      };
 
       await this.$supabase
         .from("people")
@@ -322,22 +411,14 @@ export default {
       this.loadPeople();
     },
 
-    /* ------------------------------  
-       DELETE  
-    ------------------------------ */
+    /* DELETE PERSON */
     async deletePerson() {
-      await this.$supabase
-        .from("people")
-        .delete()
-        .eq("id", this.selectedPerson.id);
-
+      await this.$supabase.from("people").delete().eq("id", this.selectedPerson.id);
       this.showDeleteModal = false;
       this.loadPeople();
     },
 
-    /* ------------------------------  
-       EXPORT CSV  
-    ------------------------------ */
+    /* EXPORT CSV */
     exportCSV() {
       if (!this.people.length) return;
 
@@ -348,32 +429,32 @@ export default {
       });
 
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
+      const link = window.URL.createObjectURL(blob);
 
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "people.csv";
-      link.click();
+      const a = document.createElement("a");
+      a.href = link;
+      a.download = "people.csv";
+      a.click();
     },
 
-    /* ------------------------------  
-       EXPORT EXCEL  
-    ------------------------------ */
+    /* EXPORT EXCEL */
     exportExcel() {
       let table = `<table>
-      <tr><th>Full Name</th><th>Work ID</th><th>Region</th><th>Designation</th><th>Expiry Date</th></tr>
-      ${this.people
-        .map(
-          p => `
         <tr>
-          <td>${p.full_name}</td>
-          <td>${p.work_id}</td>
-          <td>${p.region}</td>
-          <td>${p.designation}</td>
-          <td>${p.expiry_date}</td>
-        </tr>`
-        )
-        .join("")}
+          <th>Full Name</th><th>Work ID</th><th>Region</th><th>Designation</th><th>Expiry Date</th>
+        </tr>
+        ${this.people
+          .map(
+            p => `
+          <tr>
+            <td>${p.full_name}</td>
+            <td>${p.work_id}</td>
+            <td>${p.region}</td>
+            <td>${p.designation}</td>
+            <td>${p.expiry_date}</td>
+          </tr>`
+          )
+          .join("")}
       </table>`;
 
       const blob = new Blob([table], {
@@ -381,27 +462,23 @@ export default {
       });
 
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "people.xls";
-      link.click();
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "people.xls";
+      a.click();
     },
 
-        async handleModalSubmit({ form, photoFile }) {
-        this.form = form;
-        this.photoFile = photoFile;
+    /* HANDLE PERSON SUBMIT */
+    async handleModalSubmit({ form, photoFile }) {
+      this.form = form;
+      this.photoFile = photoFile;
 
-    if (this.isEditing) {
+      if (this.isEditing) {
         await this.updatePerson();
-    } else {
+      } else {
         await this.addPerson();
+      }
     }
-}
-  },
-
-
-
+  }
 };
 </script>
-
-
