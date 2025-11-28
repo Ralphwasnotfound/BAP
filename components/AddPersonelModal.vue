@@ -9,10 +9,22 @@
         {{ isEditing ? "Edit Person" : "Add Person" }}
       </h2>
 
-      <!-- Full Name -->
+      <!-- First Name -->
       <div class="mb-3">
-        <label>Full Name</label>
-        <input v-model="localForm.full_name" class="w-full border px-2 py-1 rounded" />
+        <label>First Name</label>
+        <input v-model="localForm.first_name" class="w-full border px-2 py-1 rounded" />
+      </div>
+
+      <!-- Middle Initial -->
+      <div class="mb-3">
+        <label>Middle Initial</label>
+        <input v-model="localForm.middle_initial" class="w-full border px-2 py-1 rounded" maxlength="1" />
+      </div>
+
+      <!-- Last Name -->
+      <div class="mb-3">
+        <label>Last Name</label>
+        <input v-model="localForm.last_name" class="w-full border px-2 py-1 rounded" />
       </div>
 
       <!-- Work ID -->
@@ -45,10 +57,28 @@
         <input type="date" v-model="localForm.valid_until" class="w-full border px-2 py-1 rounded" />
       </div>
 
-      <!-- Expiry -->
+      <!-- Expiry Date -->
       <div class="mb-3">
         <label>Expiry Date</label>
         <input type="date" v-model="localForm.expiry_date" class="w-full border px-2 py-1 rounded" />
+      </div>
+
+      <!-- Emergency Name -->
+      <div class="mb-3">
+        <label>Emergency Contact Name</label>
+        <input v-model="localForm.emergency_name" class="w-full border px-2 py-1 rounded" />
+      </div>
+
+      <!-- Emergency CP No -->
+      <div class="mb-3">
+        <label>Emergency CP No.</label>
+        <input v-model="localForm.emergency_cp" class="w-full border px-2 py-1 rounded" />
+      </div>
+
+      <!-- Emergency Address -->
+      <div class="mb-3">
+        <label>Emergency Address</label>
+        <input v-model="localForm.emergency_address" class="w-full border px-2 py-1 rounded" />
       </div>
 
       <!-- Photo -->
@@ -80,7 +110,7 @@ export default {
   props: {
     show: Boolean,
     isEditing: Boolean,
-    form: Object,          // form from admin page
+    form: Object,
   },
 
   emits: ["close", "submit"],

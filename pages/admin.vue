@@ -2,24 +2,11 @@
   <div class="p-6 max-w-5xl mx-auto">
 
     <!-- LOGIN -->
-    <div v-if="!session" class="flex justify-center mt-20">
-      <div class="bg-white p-6 rounded-lg shadow w-full max-w-sm">
-        <h2 class="text-2xl font-bold text-center mb-6">Admin Login</h2>
+    <AdminLogin
+      v-if="!session"
+      @loginSuccess="session = $event"
+    />
 
-        <input v-model="email" type="email" placeholder="Email"
-          class="w-full border rounded px-3 py-2 mb-3" />
-
-        <input v-model="password" type="password" placeholder="Password"
-          class="w-full border rounded px-3 py-2 mb-4" />
-
-        <button @click="login"
-          class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-          Login
-        </button>
-
-        <p v-if="errorMessage" class="mt-4 text-red-600 text-center">{{ errorMessage }}</p>
-      </div>
-    </div>
 
     <!-- DASHBOARD -->
     <div v-else>
@@ -67,6 +54,18 @@
         @confirm="deleteAnnouncement"
       />
 
+      <!-- SEARCH BAR -->
+<div class="mb-4">
+  <input
+    v-model="searchQuery"
+    @input="handleSearch"
+    type="text"
+    placeholder="Search people..."
+    class="border px-3 py-2 rounded w-64"
+  />
+</div>
+
+
       <!-- PEOPLE TABLE -->
       <table class="w-full border text-left mt-6">
         <thead class="bg-gray-100">
@@ -78,6 +77,7 @@
             <th class="p-2 border">Designation</th>
             <th class="p-2 border">Chapter</th>
             <th class="p-2 border">Expiry</th>
+            <th class="p-2 border">Valid Until</th>
             <th class="p-2 border">Actions</th>
           </tr>
         </thead>
@@ -90,12 +90,13 @@
               <span v-else>No Photo</span>
             </td>
 
-            <td class="p-2 border">{{ p.full_name }}</td>
+            <td class="p-2 border">  {{ p.first_name }} {{ p.middle_initial }}. {{ p.last_name }}</td>
             <td class="p-2 border">{{ p.work_id }}</td>
             <td class="p-2 border">{{ p.region }}</td>
             <td class="p-2 border">{{ p.designation }}</td>
             <td class="p-2 border">{{ p.chapter }}</td>
-            <td class="p-2 border">{{ p.expiry_date }}</td>
+            <td class="p-2 border">{{ formatFullDate(p.expiry_date) }}</td>
+            <td class="p-2 border">{{ formatMonthYear(p.valid_until) }}</td>
 
             <td class="p-2 border text-center">
               <button class="px-2 py-1 bg-yellow-500 text-white mr-2 rounded"
@@ -103,10 +104,35 @@
 
               <button class="px-2 py-1 bg-red-600 text-white rounded"
                 @click="openDeleteModal(p)">Delete</button>
+
+              <button class="px-2 py-1 bg-indigo-600 text-white rounded"
+                @click="$refs.PeopleForm.exportPersonPDF(p)">PDF</button>
             </td>
           </tr>
         </tbody>
       </table>
+
+      <div class="flex justify-center items-center gap-4 mt-4">
+        <button
+          class="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+          :disabled="currentPage === 1"
+          @click="goPrevPage"
+          >
+            Prev
+        </button>
+
+          <span class="font-semibold">
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
+
+        <button
+          class="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+          :disabled="currentPage === totalPages"
+          @click="goNextPage"
+          >
+          Next
+        </button>
+</div>
 
       <!-- ANNOUNCEMENT LIST -->
       <h2 class="text-2xl font-bold mt-10 mb-4">Announcements</h2>
@@ -162,6 +188,7 @@
         @confirm="deletePerson"
       />
 
+      <PeopleForm ref="PeopleForm" class="hidden" />
     </div>
   </div>
 </template>
@@ -171,6 +198,8 @@ import AddPersonelModal from '~/components/AddPersonelModal.vue'
 import DeleteConfirm from '~/components/DeleteConfirm.vue'
 import AnnouncementModal from '~/components/Announcement/AnnouncementModal.vue'
 import DeleteAnnouncementModal from '~/components/Announcement/DeleteAnnouncementModal.vue'
+import PeopleForm from "~/components/PeopleForm.vue"
+import AdminLogin from "~/components/AdminLogin.vue";
 
 export default {
   head() {
@@ -183,12 +212,15 @@ export default {
     AnnouncementModal,
     DeleteAnnouncementModal,
     AddPersonelModal,
-    DeleteConfirm
+    DeleteConfirm,
+    PeopleForm,
+    AdminLogin
   },
 
   data() {
     return {
       announcements: [],
+      searchQuery: "",
 
       /* ANNOUNCEMENT */
       showAnnouncementModal: false,
@@ -206,19 +238,27 @@ export default {
 
       /* PEOPLE */
       people: [],
+      currentPage: 1,
+      pageSize: 10,
+      totalPeople: 0,
       showModal: false,
       showDeleteModal: false,
       isEditing: false,
       selectedPerson: null,
 
       form: {
-        full_name: "",
+        first_name: "",
+        middle_initial: "",
+        last_name: "",
         work_id: "",
         region: "",
         designation: "",
         chapter: "",
         valid_until: "",
         expiry_date: "",
+        emergency_name: "",
+        emergency_cp: "",
+        emergency_address: "",
         picture_url: ""
       },
 
@@ -227,14 +267,13 @@ export default {
   },
 
   async mounted() {
-    const { $supabase } = useNuxtApp()
-    this.$supabase = $supabase
-
     const { data } = await this.$supabase.auth.getSession()
     this.session = data.session
 
-    this.loadPeople()
-    this.loadAnnouncements()
+    if (this.session) {
+      this.loadPeople()
+      this.loadAnnouncements()
+    }
   },
 
   methods: {
@@ -243,103 +282,142 @@ export default {
     ------------------------------ */
 
     async loadPeople() {
-      const { data, error } = await this.$supabase
-        .from("people")
-        .select("*")
-        .order("id", { ascending: false })
+      try {
+        const from = (this.currentPage - 1) * this.pageSize;
+        const to = from + this.pageSize - 1;
 
-      if (!error) this.people = data
+        let query = this.$supabase
+          .from("people")
+          .select("*", { count: "exact" })
+          .order("id", { ascending: false })
+          .range(from, to);
+
+        if (this.searchQuery.trim() !== "") {
+          const s = this.searchQuery.trim();
+          query = query.or(
+            `first_name.ilike.%${s}%,middle_initial.ilike.%${s}%,last_name.ilike.%${s}%,work_id.ilike.%${s}%,region.ilike.%${s}%,designation.ilike.%${s}%,chapter.ilike.%${s}%`
+          );
+        }
+
+        const { data, error, count } = await query;
+
+        if (error) {
+          console.error("SEARCH ERROR:", error);
+          return;
+        }
+
+        this.people = data || [];
+        this.totalPeople = count || 0;
+
+      } catch (err) {
+        console.error("Unexpected loadPeople error:", err);
+      }
     },
 
     handleModalSubmit({ form, photoFile }) {
-      this.form = form
-      this.photoFile = photoFile
+      this.form = form;
+      this.photoFile = photoFile;
 
       if (this.isEditing) {
-        this.updatePerson()
+        this.updatePerson();
       } else {
-        this.addPerson()
+        this.addPerson();
       }
     },
 
     openAddModal() {
-      this.isEditing = false
-      this.selectedPerson = null
+      this.isEditing = false;
+      this.selectedPerson = null;
 
       this.form = {
-        full_name: "",
+        first_name: "",
+        middle_initial: "",
+        last_name: "",
         work_id: "",
         region: "",
         designation: "",
         chapter: "",
         valid_until: "",
         expiry_date: "",
+        emergency_name: "",
+        emergency_cp: "",
+        emergency_address: "",
         picture_url: ""
-      }
+      };
 
-      this.photoFile = null
-      this.showModal = true
+      this.photoFile = null;
+      this.showModal = true;
     },
 
     openEditModal(person) {
-      this.isEditing = true
-      this.selectedPerson = person
-      this.form = { ...person }
-      this.photoFile = null
-      this.showModal = true
+      this.isEditing = true;
+      this.selectedPerson = person;
+      this.form = { ...person };
+      this.photoFile = null;
+      this.showModal = true;
+    },
+
+    openDeleteModal(person) {
+      this.selectedPerson = person;
+      this.showDeleteModal = true;
     },
 
     async uploadPhoto() {
-      if (!this.photoFile) return this.form.picture_url
+      if (!this.photoFile) return this.form.picture_url;
 
-      const safe = this.photoFile.name.replace(/\s+/g, "_")
-      const filename = `${Date.now()}_${safe}`
+      const safe = this.photoFile.name.replace(/\s+/g, "_");
+      const filename = `${Date.now()}_${safe}`;
 
       const { error } = await this.$supabase.storage
         .from("people_photos")
-        .upload(filename, this.photoFile)
+        .upload(filename, this.photoFile);
 
-      if (error) return this.form.picture_url
+      if (error) return this.form.picture_url;
 
       const { data } = this.$supabase.storage
         .from("people_photos")
-        .getPublicUrl(filename)
+        .getPublicUrl(filename);
 
-      return data.publicUrl
+      return data.publicUrl;
     },
 
     async addPerson() {
-      const picture_url = await this.uploadPhoto()
+      const picture_url = await this.uploadPhoto();
+      const f = this.form;
+
+      const { full_name, ...cleanData } = f;
 
       await this.$supabase.from("people").insert([
-        { ...this.form, picture_url }
-      ])
+        { ...cleanData, picture_url }
+      ]);
 
-      this.closeModal()
-      this.loadPeople()
+      this.closeModal();
+      this.loadPeople();
     },
 
     async updatePerson() {
-      const picture_url = await this.uploadPhoto()
+      const picture_url = await this.uploadPhoto();
+      const f = this.form;
 
-      await this.$supabase
-        .from("people")
-        .update({ ...this.form, picture_url })
-        .eq("id", this.selectedPerson.id)
+      const { full_name, ...cleanData } = f;
 
-      this.closeModal()
-      this.loadPeople()
+      await this.$supabase.from("people")
+        .update({ ...cleanData, picture_url })
+        .eq("id", this.selectedPerson.id);
+
+      this.closeModal();
+      this.loadPeople();
     },
 
     async deletePerson() {
-      await this.$supabase.from("people").delete().eq("id", this.selectedPerson.id)
-      this.showDeleteModal = false
-      this.loadPeople()
+      await this.$supabase.from("people").delete().eq("id", this.selectedPerson.id);
+      this.showDeleteModal = false;
+      this.loadPeople();
     },
 
     closeModal() {
-      this.showModal = false
-      this.photoFile = null
+      this.showModal = false;
+      this.photoFile = null;
     },
 
     /* ------------------------------
@@ -350,95 +428,92 @@ export default {
       const { data } = await this.$supabase
         .from("announcements")
         .select("*")
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: false });
 
-      this.announcements = data || []
+      this.announcements = data || [];
     },
 
     openAnnouncementModal() {
-      this.isEditingAnnouncement = false
-      this.announcementForm = { title: "", content: "", image_url: "" }
-      this.announcementPhotoFile = null
-      this.showAnnouncementModal = true
+      this.isEditingAnnouncement = false;
+      this.announcementForm = { title: "", content: "", image_url: "" };
+      this.announcementPhotoFile = null;
+      this.showAnnouncementModal = true;
     },
 
     openEditAnnouncement(a) {
-      this.isEditingAnnouncement = true
-      this.selectedAnnouncement = a
-      this.announcementForm = { ...a }
-      this.announcementPhotoFile = null
-      this.showAnnouncementModal = true
+      this.isEditingAnnouncement = true;
+      this.selectedAnnouncement = a;
+      this.announcementForm = { ...a };
+      this.announcementPhotoFile = null;
+      this.showAnnouncementModal = true;
     },
 
     openDeleteAnnouncement(a) {
-      this.selectedAnnouncement = a
-      this.showDeleteAnnouncementModal = true
+      this.selectedAnnouncement = a;
+      this.showDeleteAnnouncementModal = true;
     },
 
-    openDeleteModal(person) {
-  this.selectedPerson = person
-  this.showDeleteModal = true
-},
-
-
     closeAnnouncementModal() {
-      this.showAnnouncementModal = false
+      this.showAnnouncementModal = false;
     },
 
     async uploadAnnouncementImage() {
-      if (!this.announcementPhotoFile) return this.announcementForm.image_url
+      if (!this.announcementPhotoFile) return this.announcementForm.image_url;
 
-      const safe = this.announcementPhotoFile.name.replace(/\s+/g, "_")
-      const filename = `${Date.now()}_${safe}`
+      const safe = this.announcementPhotoFile.name.replace(/\s+/g, "_");
+      const filename = `${Date.now()}_${safe}`;
 
       const { error } = await this.$supabase.storage
         .from("announcement_images")
-        .upload(filename, this.announcementPhotoFile)
+        .upload(filename, this.announcementPhotoFile);
 
-      if (error) return this.announcementForm.image_url
+      if (error) return this.announcementForm.image_url;
 
       const { data } = this.$supabase.storage
         .from("announcement_images")
-        .getPublicUrl(filename)
+        .getPublicUrl(filename);
 
-      return data.publicUrl
+      return data.publicUrl;
     },
 
     async addAnnouncement() {
-      const image_url = await this.uploadAnnouncementImage()
+      const image_url = await this.uploadAnnouncementImage();
 
       await this.$supabase.from("announcements").insert([
         { ...this.announcementForm, image_url }
-      ])
+      ]);
 
-      this.closeAnnouncementModal()
-      this.loadAnnouncements()
+      this.closeAnnouncementModal();
+      this.loadAnnouncements();
     },
 
     async updateAnnouncement() {
-      const image_url = await this.uploadAnnouncementImage()
+      const image_url = await this.uploadAnnouncementImage();
 
       await this.$supabase
         .from("announcements")
         .update({ ...this.announcementForm, image_url })
-        .eq("id", this.selectedAnnouncement.id)
+        .eq("id", this.selectedAnnouncement.id);
 
-      this.closeAnnouncementModal()
-      this.loadAnnouncements()
+      this.closeAnnouncementModal();
+      this.loadAnnouncements();
     },
 
     async deleteAnnouncement() {
-      await this.$supabase.from("announcements").delete().eq("id", this.selectedAnnouncement.id)
-      this.showDeleteAnnouncementModal = false
-      this.loadAnnouncements()
+      await this.$supabase.from("announcements")
+        .delete()
+        .eq("id", this.selectedAnnouncement.id);
+
+      this.showDeleteAnnouncementModal = false;
+      this.loadAnnouncements();
     },
 
     handleAnnouncementSubmit({ form, photoFile }) {
-      this.announcementForm = form
-      this.announcementPhotoFile = photoFile
+      this.announcementForm = form;
+      this.announcementPhotoFile = photoFile;
 
-      if (this.isEditingAnnouncement) this.updateAnnouncement()
-      else this.addAnnouncement()
+      if (this.isEditingAnnouncement) this.updateAnnouncement();
+      else this.addAnnouncement();
     },
 
     /* ------------------------------
@@ -446,21 +521,21 @@ export default {
     ------------------------------ */
 
     exportCSV() {
-      if (!this.people.length) return
+      if (!this.people.length) return;
 
-      let csv = "Full Name,Work ID,Region,Designation,Expiry\n"
+      let csv = "Full Name,Work ID,Region,Designation,Expiry\n";
 
       this.people.forEach(p => {
-        csv += `${p.full_name},${p.work_id},${p.region},${p.designation},${p.expiry_date}\n`
-      })
+        csv += `${p.last_name}, ${p.first_name} ${p.middle_initial},${p.work_id},${p.region},${p.designation},${p.expiry_date}\n`;
+      });
 
-      const blob = new Blob([csv], { type: "text/csv" })
-      const link = URL.createObjectURL(blob)
+      const blob = new Blob([csv], { type: "text/csv" });
+      const link = URL.createObjectURL(blob);
 
-      const a = document.createElement("a")
-      a.href = link
-      a.download = "people.csv"
-      a.click()
+      const a = document.createElement("a");
+      a.href = link;
+      a.download = "people.csv";
+      a.click();
     },
 
     exportExcel() {
@@ -480,42 +555,89 @@ export default {
           <td>${p.expiry_date}</td>
         </tr>`
           )
-          .join("")}
-      </table>`
+          .concat("")}
+      </table>`;
 
-      const blob = new Blob([table], { type: "application/vnd.ms-excel" })
-      const url = URL.createObjectURL(blob)
+      const blob = new Blob([table], { type: "application/vnd.ms-excel" });
+      const url = URL.createObjectURL(blob);
 
-      const a = document.createElement("a")
-      a.href = url
-      a.download = "people.xls"
-      a.click()
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "people.xls";
+      a.click();
+    },
+
+    goPrevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.loadPeople();
+      }
+    },
+
+    goNextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        this.loadPeople();
+      }
+    },
+
+    handleSearch() {
+      this.currentPage = 1;
+      this.loadPeople();
     },
 
     /* ------------------------------
-       AUTH
+       AUTH (RESTORED TO ORIGINAL)
     ------------------------------ */
-
     async login() {
-      this.errorMessage = ""
+      this.errorMessage = "";
 
       const { data, error } = await this.$supabase.auth.signInWithPassword({
         email: this.email,
         password: this.password
-      })
+      });
 
       if (error) {
-        this.errorMessage = "Invalid login credentials"
-        return
+        this.errorMessage = "Invalid login credentials";
+        return;
       }
 
-      this.session = data.session
+      this.session = data.session;
+      this.loadPeople();
+      this.loadAnnouncements();
     },
 
     async logout() {
-      await this.$supabase.auth.signOut()
-      this.session = null
+      await this.$supabase.auth.signOut();
+      this.session = null;
+    },
+
+    /* ------------------------------
+       UTILITIES
+    ------------------------------ */
+
+    formatMonthYear(value) {
+      if (!value) return "";
+      const d = new Date(value);
+      return d.toLocaleString("en-US", { month: "long", year: "numeric" });
+    },
+
+    formatFullDate(value) {
+      if (!value) return "";
+      const d = new Date(value);
+      return d.toLocaleString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+      });
+    },
+  },
+
+  computed: {
+    totalPages() {
+      return Math.ceil(this.totalPeople / this.pageSize);
     }
   }
 }
 </script>
+
