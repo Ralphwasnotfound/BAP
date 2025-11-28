@@ -1,10 +1,9 @@
 <template>
   <div
     v-if="show"
-    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40"
+    class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center"
   >
     <div class="bg-white p-6 rounded shadow w-80">
-
       <h2 class="text-xl font-bold text-red-600 mb-4">Delete Person</h2>
 
       <p>
@@ -12,9 +11,10 @@
         <b>{{ person?.full_name }}</b>?
       </p>
 
-      <div class="flex justify-end mt-6">
+      <div class="flex justify-end gap-2 mt-6">
+
         <button
-          class="px-3 py-1 bg-gray-300 rounded mr-2"
+          class="px-3 py-1 bg-gray-300 rounded"
           @click="$emit('close')"
         >
           Cancel
@@ -26,8 +26,8 @@
         >
           Delete
         </button>
-      </div>
 
+      </div>
     </div>
   </div>
 </template>
@@ -38,6 +38,7 @@ export default {
     show: Boolean,
     person: Object
   },
+
   emits: ["close", "confirm"]
 };
 </script>
