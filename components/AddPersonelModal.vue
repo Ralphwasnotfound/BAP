@@ -10,17 +10,32 @@
       <div class="grid grid-cols-3 gap-3">
         <div>
           <label class="font-semibold text-sm">First Name</label>
-          <input v-model="localForm.first_name" class="border w-full px-2 py-1 rounded" />
+          <input
+            v-model="localForm.first_name"
+            @blur="localForm.first_name = capitalizeWords(localForm.first_name)"
+            class="border w-full px-2 py-1 rounded"
+          />
+          <p v-if="errors.first_name" class="text-red-500 text-xs mt-1">{{ errors.first_name }}</p>
         </div>
 
         <div>
           <label class="font-semibold text-sm">Middle Initial</label>
-          <input v-model="localForm.middle_initial" maxlength="1" class="border w-full px-2 py-1 rounded" />
+          <input
+            v-model="localForm.middle_initial"
+            maxlength="1"
+            class="border w-full px-2 py-1 rounded"
+          />
+          <p v-if="errors.middle_initial" class="text-red-500 text-xs mt-1">{{ errors.middle_initial }}</p>
         </div>
 
         <div>
           <label class="font-semibold text-sm">Surname</label>
-          <input v-model="localForm.last_name" class="border w-full px-2 py-1 rounded" />
+          <input
+            v-model="localForm.last_name"
+            @blur="localForm.last_name = capitalizeWords(localForm.last_name)"
+            class="border w-full px-2 py-1 rounded"
+          />
+          <p v-if="errors.last_name" class="text-red-500 text-xs mt-1">{{ errors.last_name }}</p>
         </div>
       </div>
 
@@ -28,17 +43,32 @@
       <div class="grid grid-cols-3 gap-3 mt-4">
         <div>
           <label class="font-semibold text-sm">Designation</label>
-          <input v-model="localForm.designation" class="border w-full px-2 py-1 rounded" />
+          <input
+            v-model="localForm.designation"
+            @blur="localForm.designation = capitalizeWords(localForm.designation)"
+            class="border w-full px-2 py-1 rounded"
+          />
+          <p v-if="errors.designation" class="text-red-500 text-xs mt-1">{{ errors.designation }}</p>
         </div>
 
         <div>
           <label class="font-semibold text-sm">Chapter</label>
-          <input v-model="localForm.chapter" class="border w-full px-2 py-1 rounded" />
+          <input
+            v-model="localForm.chapter"
+            @blur="localForm.chapter = capitalizeWords(localForm.chapter)"
+            class="border w-full px-2 py-1 rounded"
+          />
+          <p v-if="errors.chapter" class="text-red-500 text-xs mt-1">{{ errors.chapter }}</p>
         </div>
 
         <div>
           <label class="font-semibold text-sm">Region</label>
-          <input v-model="localForm.region" class="border w-full px-2 py-1 rounded" />
+          <input
+            v-model="localForm.region"
+            @blur="localForm.region = capitalizeWords(localForm.region)"
+            class="border w-full px-2 py-1 rounded"
+          />
+          <p v-if="errors.region" class="text-red-500 text-xs mt-1">{{ errors.region }}</p>
         </div>
       </div>
 
@@ -46,29 +76,41 @@
       <div class="mt-4">
         <label class="font-semibold text-sm">ID No.</label>
         <input v-model="localForm.work_id" class="border w-full px-2 py-1 rounded" />
+        <p v-if="errors.work_id" class="text-red-500 text-xs mt-1">{{ errors.work_id }}</p>
       </div>
 
-      <!-- EMERGENCY CONTACT SECTION -->
+      <!-- EMERGENCY CONTACT -->
       <h3 class="font-bold mt-5 mb-2 text-gray-700">In Case of Emergency</h3>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="font-semibold text-sm">Name</label>
-          <input v-model="localForm.emergency_name" class="border w-full px-2 py-1 rounded" />
+          <input
+            v-model="localForm.emergency_name"
+            @blur="localForm.emergency_name = capitalizeWords(localForm.emergency_name)"
+            class="border w-full px-2 py-1 rounded"
+          />
+          <p v-if="errors.emergency_name" class="text-red-500 text-xs mt-1">{{ errors.emergency_name }}</p>
         </div>
 
         <div>
           <label class="font-semibold text-sm">CP No.</label>
           <input v-model="localForm.emergency_cp" class="border w-full px-2 py-1 rounded" />
+          <p v-if="errors.emergency_cp" class="text-red-500 text-xs mt-1">{{ errors.emergency_cp }}</p>
         </div>
       </div>
 
       <div class="mt-3">
         <label class="font-semibold text-sm">Address</label>
-        <input v-model="localForm.emergency_address" class="border w-full px-2 py-1 rounded" />
+        <input
+          v-model="localForm.emergency_address"
+          @blur="localForm.emergency_address = capitalizeWords(localForm.emergency_address)"
+          class="border w-full px-2 py-1 rounded"
+        />
+        <p v-if="errors.emergency_address" class="text-red-500 text-xs mt-1">{{ errors.emergency_address }}</p>
       </div>
 
-      <!-- VALID UNTIL / EXPIRY / PHOTO -->
+      <!-- VALID UNTIL / EXPIRY -->
       <div class="grid grid-cols-3 gap-3 mt-5">
 
         <!-- LEFT SIDE -->
@@ -79,56 +121,46 @@
             <label class="font-semibold text-sm">Valid Until (Month & Year)</label>
 
             <div class="grid grid-cols-2 gap-2">
-              <!-- MONTH -->
               <select v-model="validUntil.month" class="border px-2 py-1 rounded">
                 <option disabled value="">Month</option>
-                <option v-for="(m, i) in months" :key="i" :value="i + 1">
-                  {{ m }}
-                </option>
+                <option v-for="(m, i) in months" :key="i" :value="i + 1">{{ m }}</option>
               </select>
 
-              <!-- YEAR -->
               <select v-model="validUntil.year" class="border px-2 py-1 rounded">
                 <option disabled value="">Year</option>
-                <option v-for="y in yearOptions" :key="y" :value="y">
-                  {{ y }}
-                </option>
+                <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
               </select>
             </div>
+
+            <p v-if="errors.valid_until" class="text-red-500 text-xs mt-1">{{ errors.valid_until }}</p>
           </div>
 
-          <!-- EXPIRY DATE -->
+          <!-- EXPIRY -->
           <div>
             <label class="font-semibold text-sm">Expiry Date</label>
 
             <div class="grid grid-cols-3 gap-2">
-              <!-- MONTH -->
               <select v-model="expiry.month" class="border px-2 py-1 rounded">
                 <option value="">Month</option>
-                <option v-for="(m, i) in months" :key="i" :value="i + 1">
-                  {{ m }}
-                </option>
+                <option v-for="(m, i) in months" :key="i" :value="i + 1">{{ m }}</option>
               </select>
 
-              <!-- DAY -->
               <select v-model="expiry.day" class="border px-2 py-1 rounded">
                 <option value="">Day</option>
                 <option v-for="d in days" :key="d" :value="d">{{ d }}</option>
               </select>
 
-              <!-- YEAR -->
               <select v-model="expiry.year" class="border px-2 py-1 rounded">
                 <option value="">Year</option>
-                <option v-for="y in yearOptions" :key="y" :value="y">
-                  {{ y }}
-                </option>
+                <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
               </select>
             </div>
-          </div>
 
+            <p v-if="errors.expiry_date" class="text-red-500 text-xs mt-1">{{ errors.expiry_date }}</p>
+          </div>
         </div>
 
-        <!-- PHOTO UPLOAD BOX -->
+        <!-- PHOTO -->
         <div class="flex flex-col items-center">
           <label class="font-semibold text-sm mb-1">Photo</label>
 
@@ -136,11 +168,7 @@
             class="w-24 h-24 border rounded-md flex items-center justify-center text-xs text-gray-500 cursor-pointer hover:bg-gray-100 transition"
             @click="choosePhoto"
           >
-            <img
-              v-if="previewPhoto"
-              :src="previewPhoto"
-              class="w-full h-full object-cover rounded-md"
-            />
+            <img v-if="previewPhoto" :src="previewPhoto" class="w-full h-full object-cover rounded-md" />
             <span v-else>Click to Upload</span>
           </div>
 
@@ -172,26 +200,18 @@
 
 <script>
 export default {
-  props: {
-    show: Boolean,
-    isEditing: Boolean,
-    form: Object,
-  },
-
+  props: { show: Boolean, isEditing: Boolean, form: Object },
   emits: ["close", "submit"],
 
   data() {
     return {
+      errors: {},
       localForm: { ...this.form },
 
-      // image
       photoFile: null,
       previewPhoto: this.form.picture_url || null,
 
-      // VALID UNTIL = month + year
       validUntil: { month: "", year: "" },
-
-      // EXPIRY DATE = full date
       expiry: { day: "", month: "", year: "" },
 
       months: [
@@ -199,60 +219,164 @@ export default {
         "July","August","September","October","November","December"
       ],
 
-      days: Array.from({ length: 31 }, (_, i) => i + 1),
-
       yearOptions: Array.from({ length: 40 }, (_, i) => new Date().getFullYear() + i)
-    };
+    }
+  },
+
+  computed: {
+    days() {
+      const month = Number(this.expiry.month)
+      const year = Number(this.expiry.year)
+
+      if (!month || !year)
+        return Array.from({ length: 31 }, (_, i) => i + 1)
+
+      return this.getDaysInMonth(month, year)
+    }
   },
 
   watch: {
     form(newVal) {
-      this.localForm = { ...newVal };
-      this.previewPhoto = newVal.picture_url || null;
+      this.localForm = { ...newVal }
+      this.previewPhoto = newVal.picture_url || null
     },
 
-    // VALID UNTIL CONVERSION
     validUntil: {
       deep: true,
       handler(v) {
         if (v.year && v.month) {
-          this.localForm.valid_until = `${v.year}-${String(v.month).padStart(2, "0")}-01`;
+          this.localForm.valid_until =
+            `${v.year}-${String(v.month).padStart(2, "0")}-01`
         }
       }
     },
 
-    // EXPIRY DATE CONVERSION
     expiry: {
       deep: true,
       handler(v) {
         if (v.year && v.month && v.day) {
           this.localForm.expiry_date =
-            `${v.year}-${String(v.month).padStart(2, "0")}-${String(v.day).padStart(2, "0")}`;
+            `${v.year}-${String(v.month).padStart(2, "0")}-${String(v.day).padStart(2, "0")}`
+
+          let validYear = Number(v.year)
+          let validMonth = Number(v.month) - 1
+
+          if (validMonth === 0) {
+            validMonth = 12
+            validYear -= 1
+          }
+
+          this.validUntil.year = validYear
+          this.validUntil.month = validMonth
+
+          this.localForm.valid_until =
+            `${validYear}-${String(validMonth).padStart(2, "0")}-01`
         }
       }
+    },
+
+    "localForm.middle_initial"(val) {
+      if (!val) return
+      this.localForm.middle_initial = val.trim().toUpperCase().slice(0, 1)
+    },
+
+    "expiry.month"(newMonth) {
+      const maxDays = this.getDaysInMonth(newMonth, this.expiry.year)
+      if (this.expiry.day > maxDays.length)
+        this.expiry.day = maxDays.length
+    },
+
+    "expiry.year"(newYear) {
+      const maxDays = this.getDaysInMonth(this.expiry.month, newYear)
+      if (this.expiry.day > maxDays.length)
+        this.expiry.day = maxDays.length
     }
   },
 
   methods: {
     choosePhoto() {
-      this.$refs.photoInput.click();
+      this.$refs.photoInput.click()
     },
 
     handlePhoto(e) {
-      const file = e.target.files[0];
-      this.photoFile = file;
-
-      if (file) {
-        this.previewPhoto = URL.createObjectURL(file);
-      }
+      const file = e.target.files[0]
+      this.photoFile = file
+      if (file) this.previewPhoto = URL.createObjectURL(file)
     },
 
     submitForm() {
+      this.errors = this.validateForm()
+
+      if (Object.keys(this.errors).length > 0) return
+
       this.$emit("submit", {
         form: this.localForm,
         photoFile: this.photoFile,
-      });
+      })
+    },
+
+    validateForm() {
+      const errors = {}
+
+      // REQUIRED FIELDS
+      if (!this.localForm.first_name?.trim()) errors.first_name = "First name is required."
+      if (!this.localForm.last_name?.trim()) errors.last_name = "Last name is required."
+      if (!this.localForm.designation?.trim()) errors.designation = "Designation is required."
+      if (!this.localForm.chapter?.trim()) errors.chapter = "Chapter is required."
+      if (!this.localForm.region?.trim()) errors.region = "Region is required."
+      if (!this.localForm.work_id?.trim()) errors.work_id = "ID No. is required."
+
+      if (!this.localForm.emergency_name?.trim()) errors.emergency_name = "Emergency contact name is required."
+      if (!this.localForm.emergency_address?.trim()) errors.emergency_address = "Emergency address is required."
+      if (!this.localForm.emergency_cp?.trim()) errors.emergency_cp = "Emergency contact number is required."
+
+      // VALID UNTIL
+      if (!this.validUntil.year || !this.validUntil.month)
+        errors.valid_until = "Valid Until is required."
+
+      if (!this.localForm.expiry_date)
+        errors.expiry_date = "Expiry date is required."
+
+      // OPTIONAL MIDDLE INITIAL
+      const mi = (this.localForm.middle_initial || "").trim()
+      if (mi.length > 1) errors.middle_initial = "Middle initial must be 1 character."
+
+      // DIGIT ONLY FOR CP
+      if (this.localForm.emergency_cp && !/^[0-9]+$/.test(this.localForm.emergency_cp))
+        errors.emergency_cp = "Emergency contact number must contain digits only."
+
+      // NAME DIGIT VALIDATION
+      if (/\d/.test(this.localForm.first_name))
+        errors.first_name = "First name cannot contain numbers."
+
+      if (/\d/.test(this.localForm.last_name))
+        errors.last_name = "Last name cannot contain numbers."
+
+      // DATE VALIDATION
+      if (this.localForm.expiry_date && this.localForm.valid_until) {
+        if (this.localForm.expiry_date < this.localForm.valid_until)
+          errors.expiry_date = "Expiry date cannot be earlier than Valid Until."
+      }
+
+      return errors
+    },
+
+    capitalizeWords(str) {
+      if (!str) return ""
+      return str
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    },
+
+    getDaysInMonth(month, year) {
+      return Array.from(
+        { length: new Date(year, month, 0).getDate() },
+        (_, i) => i + 1
+      )
     }
   }
-};
+}
 </script>
