@@ -4,16 +4,14 @@
     <!-- LOGIN -->
     <AdminLogin
       v-if="!session"
-      @loginSuccess="session = $event"
+      @loginSuccess="handleLoginSuccess"
     />
-
 
     <!-- DASHBOARD -->
     <div v-else>
-
+      <!-- HEADER -->
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">Admin Dashboard</h1>
-
         <button class="px-4 py-2 bg-red-600 text-white rounded" @click="logout">
           Logout
         </button>
@@ -21,50 +19,22 @@
 
       <!-- ACTION BUTTONS -->
       <div class="flex gap-3 mb-4">
-        <button class="px-4 py-2 bg-blue-600 text-white rounded" @click="openAddModal">
-          + Add Person
-        </button>
-
-        <button class="px-4 py-2 bg-green-600 text-white rounded" @click="exportCSV">
-          Export CSV
-        </button>
-
-        <button class="px-4 py-2 bg-yellow-500 text-white rounded" @click="exportExcel">
-          Export Excel
-        </button>
-
-        <button class="px-4 py-2 bg-purple-600 text-white rounded" @click="openAnnouncementModal">
-          + Add Announcement
-        </button>
+        <button class="px-4 py-2 bg-blue-600 text-white rounded" @click="openAddModal">+ Add Person</button>
+        <button class="px-4 py-2 bg-green-600 text-white rounded" @click="exportCSV">Export CSV</button>
+        <button class="px-4 py-2 bg-yellow-500 text-white rounded" @click="exportExcel">Export Excel</button>
+        <button class="px-4 py-2 bg-purple-600 text-white rounded" @click="openAnnouncementModal">+ Add Announcement</button>
       </div>
 
-      <!-- ANNOUNCEMENT MODALS -->
-      <AnnouncementModal
-        :show="showAnnouncementModal"
-        :isEditing="isEditingAnnouncement"
-        :form="announcementForm"
-        @close="closeAnnouncementModal"
-        @submit="handleAnnouncementSubmit"
-      />
-
-      <DeleteAnnouncementModal
-        :show="showDeleteAnnouncementModal"
-        :announcement="selectedAnnouncement"
-        @close="showDeleteAnnouncementModal = false"
-        @confirm="deleteAnnouncement"
-      />
-
-      <!-- SEARCH BAR -->
-<div class="mb-4">
-  <input
-    v-model="searchQuery"
-    @input="handleSearch"
-    type="text"
-    placeholder="Search people..."
-    class="border px-3 py-2 rounded w-64"
-  />
-</div>
-
+      <!-- SEARCH -->
+      <div class="mb-4">
+        <input
+          v-model="searchQuery"
+          @input="handleSearch"
+          type="text"
+          placeholder="Search people..."
+          class="border px-3 py-2 rounded w-64"
+        />
+      </div>
 
       <!-- PEOPLE TABLE -->
       <table class="w-full border text-left mt-6">
@@ -85,12 +55,11 @@
         <tbody>
           <tr v-for="p in people" :key="p.id">
             <td class="p-2 border text-center">
-              <img v-if="p.picture_url" :src="p.picture_url"
-                class="w-10 h-10 rounded-full object-cover mx-auto" />
+              <img v-if="p.picture_url" :src="p.picture_url" class="w-10 h-10 rounded-full object-cover mx-auto" />
               <span v-else>No Photo</span>
             </td>
 
-            <td class="p-2 border">  {{ p.first_name }} {{ p.middle_initial }}. {{ p.last_name }}</td>
+            <td class="p-2 border">{{ p.first_name }} {{ p.middle_initial }}. {{ p.last_name }}</td>
             <td class="p-2 border">{{ p.work_id }}</td>
             <td class="p-2 border">{{ p.region }}</td>
             <td class="p-2 border">{{ p.designation }}</td>
@@ -99,42 +68,22 @@
             <td class="p-2 border">{{ formatMonthYear(p.valid_until) }}</td>
 
             <td class="p-2 border text-center">
-              <button class="px-2 py-1 bg-yellow-500 text-white mr-2 rounded"
-                @click="openEditModal(p)">Edit</button>
-
-              <button class="px-2 py-1 bg-red-600 text-white rounded"
-                @click="openDeleteModal(p)">Delete</button>
-
-              <button class="px-2 py-1 bg-indigo-600 text-white rounded"
-                @click="$refs.PeopleForm.exportPersonPDF(p)">PDF</button>
+              <button class="px-2 py-1 bg-yellow-500 text-white rounded" @click="openEditModal(p)">Edit</button>
+              <button class="px-2 py-1 bg-red-600 text-white rounded" @click="openDeleteModal(p)">Delete</button>
+              <button class="px-2 py-1 bg-indigo-600 text-white rounded" @click="$refs.PeopleForm.exportPersonPDF(p)">PDF</button>
             </td>
           </tr>
         </tbody>
       </table>
 
+      <!-- PAGINATION -->
       <div class="flex justify-center items-center gap-4 mt-4">
-        <button
-          class="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-          :disabled="currentPage === 1"
-          @click="goPrevPage"
-          >
-            Prev
-        </button>
+        <button class="px-3 py-1 bg-gray-300 rounded" :disabled="currentPage === 1" @click="goPrevPage">Prev</button>
+        <span class="font-semibold">Page {{ currentPage }} of {{ totalPages }}</span>
+        <button class="px-3 py-1 bg-gray-300 rounded" :disabled="currentPage === totalPages" @click="goNextPage">Next</button>
+      </div>
 
-          <span class="font-semibold">
-            Page {{ currentPage }} of {{ totalPages }}
-          </span>
-
-        <button
-          class="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-          :disabled="currentPage === totalPages"
-          @click="goNextPage"
-          >
-          Next
-        </button>
-</div>
-
-      <!-- ANNOUNCEMENT LIST -->
+      <!-- ANNOUNCEMENTS -->
       <h2 class="text-2xl font-bold mt-10 mb-4">Announcements</h2>
 
       <table class="w-full border text-left mb-6">
@@ -158,11 +107,8 @@
             <td class="p-2 border">{{ a.content }}</td>
 
             <td class="p-2 border text-center">
-              <button class="px-2 py-1 bg-yellow-500 text-white mr-2 rounded"
-                @click="openEditAnnouncement(a)">Edit</button>
-
-              <button class="px-2 py-1 bg-red-600 text-white rounded"
-                @click="openDeleteAnnouncement(a)">Delete</button>
+              <button class="px-2 py-1 bg-yellow-500 text-white rounded" @click="openEditAnnouncement(a)">Edit</button>
+              <button class="px-2 py-1 bg-red-600 text-white rounded" @click="openDeleteAnnouncement(a)">Delete</button>
             </td>
           </tr>
 
@@ -172,7 +118,7 @@
         </tbody>
       </table>
 
-      <!-- PERSON MODALS -->
+      <!-- MODALS -->
       <AddPersonelModal
         :show="showModal"
         :isEditing="isEditing"
@@ -188,8 +134,26 @@
         @confirm="deletePerson"
       />
 
+      <AnnouncementModal
+        :show="showAnnouncementModal"
+        :isEditing="isEditingAnnouncement"
+        :form="announcementForm"
+        @close="closeAnnouncementModal"
+        @submit="handleAnnouncementSubmit"
+      />
+
+      <DeleteAnnouncementModal
+        :show="showDeleteAnnouncementModal"
+        :announcement="selectedAnnouncement"
+        @close="showDeleteAnnouncementModal = false"
+        @confirm="deleteAnnouncement"
+      />
+
+      <!-- PDF Component (Hidden) -->
       <PeopleForm ref="PeopleForm" class="hidden" />
+
     </div>
+
   </div>
 </template>
 
@@ -203,9 +167,7 @@ import AdminLogin from "~/components/AdminLogin.vue";
 
 export default {
   head() {
-    return {
-      title: "BAP Federation - Admin",
-    }
+    return { title: "BAP Federation - Admin" }
   },
 
   components: {
@@ -219,28 +181,14 @@ export default {
 
   data() {
     return {
-      announcements: [],
-      searchQuery: "",
-
-      /* ANNOUNCEMENT */
-      showAnnouncementModal: false,
-      showDeleteAnnouncementModal: false,
-      isEditingAnnouncement: false,
-      selectedAnnouncement: null,
-      announcementForm: { title: "", content: "", image_url: "" },
-      announcementPhotoFile: null,
-
-      /* AUTH */
-      email: "",
-      password: "",
-      errorMessage: "",
       session: null,
 
-      /* PEOPLE */
+      searchQuery: "",
       people: [],
       currentPage: 1,
       pageSize: 10,
       totalPeople: 0,
+
       showModal: false,
       showDeleteModal: false,
       isEditing: false,
@@ -262,67 +210,105 @@ export default {
         picture_url: ""
       },
 
-      photoFile: null
+      photoFile: null,
+
+      // Announcements
+      announcements: [],
+      showAnnouncementModal: false,
+      showDeleteAnnouncementModal: false,
+      selectedAnnouncement: null,
+      isEditingAnnouncement: false,
+      announcementForm: { title: "", content: "", image_url: "" },
+      announcementPhotoFile: null,
     }
   },
 
   async mounted() {
-    const { data } = await this.$supabase.auth.getSession()
-    this.session = data.session
+    const { $supabase } = useNuxtApp();
 
-    if (this.session) {
-      this.loadPeople()
-      this.loadAnnouncements()
+    const { data } = await $supabase.auth.getSession();
+    const supaSession = data.session;
+
+    const verified = localStorage.getItem("admin_verified") === "true";
+
+    if (!supaSession || !verified) {
+      this.session = null;
+      return;
+    }
+
+    this.session = supaSession;
+    this.loadPeople();
+    this.loadAnnouncements();
+  },
+
+  computed: {
+    totalPages() {
+      return Math.ceil(this.totalPeople / this.pageSize);
     }
   },
 
   methods: {
-    /* ------------------------------
-       PEOPLE CRUD
-    ------------------------------ */
-
-    async loadPeople() {
-      try {
-        const from = (this.currentPage - 1) * this.pageSize;
-        const to = from + this.pageSize - 1;
-
-        let query = this.$supabase
-          .from("people")
-          .select("*", { count: "exact" })
-          .order("id", { ascending: false })
-          .range(from, to);
-
-        if (this.searchQuery.trim() !== "") {
-          const s = this.searchQuery.trim();
-          query = query.or(
-            `first_name.ilike.%${s}%,middle_initial.ilike.%${s}%,last_name.ilike.%${s}%,work_id.ilike.%${s}%,region.ilike.%${s}%,designation.ilike.%${s}%,chapter.ilike.%${s}%`
-          );
-        }
-
-        const { data, error, count } = await query;
-
-        if (error) {
-          console.error("SEARCH ERROR:", error);
-          return;
-        }
-
-        this.people = data || [];
-        this.totalPeople = count || 0;
-
-      } catch (err) {
-        console.error("Unexpected loadPeople error:", err);
-      }
+    /* ----------------------------------------
+       AUTH
+    ---------------------------------------- */
+    handleLoginSuccess(session) {
+      this.session = session;
+      this.loadPeople();
+      this.loadAnnouncements();
     },
 
+    async logout() {
+      const { $supabase } = useNuxtApp();
+
+      await $supabase.auth.signOut();
+
+      localStorage.removeItem("admin_verified");
+      this.session = null;
+    },
+
+    /* ----------------------------------------
+       LOAD DATA
+    ---------------------------------------- */
+    async loadPeople() {
+      const from = (this.currentPage - 1) * this.pageSize;
+      const to = from + this.pageSize - 1;
+
+      let query = this.$supabase
+        .from("people")
+        .select("*", { count: "exact" })
+        .order("id", { ascending: false })
+        .range(from, to);
+
+      if (this.searchQuery.trim() !== "") {
+        const s = this.searchQuery.trim();
+        query = query.or(
+          `first_name.ilike.%${s}%,middle_initial.ilike.%${s}%,last_name.ilike.%${s}%,work_id.ilike.%${s}%,region.ilike.%${s}%,designation.ilike.%${s}%,chapter.ilike.%${s}%`
+        );
+      }
+
+      const { data, count } = await query;
+      this.people = data || [];
+      this.totalPeople = count || 0;
+    },
+
+    async loadAnnouncements() {
+      const { data } = await this.$supabase
+        .from("announcements")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      this.announcements = data || [];
+    },
+
+    /* ----------------------------------------
+       PEOPLE CRUD
+    ---------------------------------------- */
     handleModalSubmit({ form, photoFile }) {
       this.form = form;
       this.photoFile = photoFile;
 
-      if (this.isEditing) {
-        this.updatePerson();
-      } else {
-        this.addPerson();
-      }
+      if (this.isEditing) this.updatePerson();
+      else this.addPerson();
     },
 
     openAddModal() {
@@ -365,7 +351,10 @@ export default {
     async uploadPhoto() {
       if (!this.photoFile) return this.form.picture_url;
 
-      const safe = this.photoFile.name.replace(/\s+/g, "_");
+      const safe = this.photoFile.name
+        .replace(/\s+/g, "_")
+        .replace(/[^a-zA-Z0-9._-]/g, "");
+
       const filename = `${Date.now()}_${safe}`;
 
       const { error } = await this.$supabase.storage
@@ -383,9 +372,7 @@ export default {
 
     async addPerson() {
       const picture_url = await this.uploadPhoto();
-      const f = this.form;
-
-      const { full_name, ...cleanData } = f;
+      const { full_name, ...cleanData } = this.form;
 
       await this.$supabase.from("people").insert([
         { ...cleanData, picture_url }
@@ -397,9 +384,7 @@ export default {
 
     async updatePerson() {
       const picture_url = await this.uploadPhoto();
-      const f = this.form;
-
-      const { full_name, ...cleanData } = f;
+      const { full_name, ...cleanData } = this.form;
 
       await this.$supabase.from("people")
         .update({ ...cleanData, picture_url })
@@ -410,7 +395,10 @@ export default {
     },
 
     async deletePerson() {
-      await this.$supabase.from("people").delete().eq("id", this.selectedPerson.id);
+      await this.$supabase.from("people")
+        .delete()
+        .eq("id", this.selectedPerson.id);
+
       this.showDeleteModal = false;
       this.loadPeople();
     },
@@ -420,19 +408,9 @@ export default {
       this.photoFile = null;
     },
 
-    /* ------------------------------
+    /* ----------------------------------------
        ANNOUNCEMENTS CRUD
-    ------------------------------ */
-
-    async loadAnnouncements() {
-      const { data } = await this.$supabase
-        .from("announcements")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      this.announcements = data || [];
-    },
-
+    ---------------------------------------- */
     openAnnouncementModal() {
       this.isEditingAnnouncement = false;
       this.announcementForm = { title: "", content: "", image_url: "" };
@@ -460,7 +438,10 @@ export default {
     async uploadAnnouncementImage() {
       if (!this.announcementPhotoFile) return this.announcementForm.image_url;
 
-      const safe = this.announcementPhotoFile.name.replace(/\s+/g, "_");
+      const safe = this.announcementPhotoFile.name
+        .replace(/\s+/g, "_")
+        .replace(/[^a-zA-Z0-9._-]/g, "");
+
       const filename = `${Date.now()}_${safe}`;
 
       const { error } = await this.$supabase.storage
@@ -516,9 +497,27 @@ export default {
       else this.addAnnouncement();
     },
 
-    /* ------------------------------
-       EXPORT
-    ------------------------------ */
+    /* ----------------------------------------
+       SEARCH + PAGINATION + EXPORT
+    ---------------------------------------- */
+    goPrevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.loadPeople();
+      }
+    },
+
+    goNextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        this.loadPeople();
+      }
+    },
+
+    handleSearch() {
+      this.currentPage = 1;
+      this.loadPeople();
+    },
 
     exportCSV() {
       if (!this.people.length) return;
@@ -548,14 +547,14 @@ export default {
           .map(
             p => `
         <tr>
-          <td>${p.full_name}</td>
+          <td>${p.first_name} ${p.middle_initial}. ${p.last_name}</td>
           <td>${p.work_id}</td>
           <td>${p.region}</td>
           <td>${p.designation}</td>
           <td>${p.expiry_date}</td>
         </tr>`
           )
-          .concat("")}
+          .join("")}
       </table>`;
 
       const blob = new Blob([table], { type: "application/vnd.ms-excel" });
@@ -567,55 +566,9 @@ export default {
       a.click();
     },
 
-    goPrevPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-        this.loadPeople();
-      }
-    },
-
-    goNextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-        this.loadPeople();
-      }
-    },
-
-    handleSearch() {
-      this.currentPage = 1;
-      this.loadPeople();
-    },
-
-    /* ------------------------------
-       AUTH (RESTORED TO ORIGINAL)
-    ------------------------------ */
-    async login() {
-      this.errorMessage = "";
-
-      const { data, error } = await this.$supabase.auth.signInWithPassword({
-        email: this.email,
-        password: this.password
-      });
-
-      if (error) {
-        this.errorMessage = "Invalid login credentials";
-        return;
-      }
-
-      this.session = data.session;
-      this.loadPeople();
-      this.loadAnnouncements();
-    },
-
-    async logout() {
-      await this.$supabase.auth.signOut();
-      this.session = null;
-    },
-
-    /* ------------------------------
+    /* ----------------------------------------
        UTILITIES
-    ------------------------------ */
-
+    ---------------------------------------- */
     formatMonthYear(value) {
       if (!value) return "";
       const d = new Date(value);
@@ -631,13 +584,6 @@ export default {
         year: "numeric"
       });
     },
-  },
-
-  computed: {
-    totalPages() {
-      return Math.ceil(this.totalPeople / this.pageSize);
-    }
   }
-}
+};
 </script>
-
