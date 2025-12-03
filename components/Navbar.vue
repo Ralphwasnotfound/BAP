@@ -18,7 +18,7 @@
 
         <!-- RIGHT: Admin Login -->
         <NuxtLink
-            to="/admin"
+            to="/login"
             class="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 text-sm font-semibold"
         >
           Admin Login

@@ -30,7 +30,7 @@ export default {
       const temp = sessionStorage.getItem("temporary_trust") === "true";
 
       if (!data.session || !verified || (!trusted && !temp)) {
-        this.$router.push("/login");
+        this.$router.replace("/login");
       }
     }
   }
