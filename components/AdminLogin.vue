@@ -68,7 +68,7 @@
 
           <div class="flex justify-center gap-3 mb-6">
             <input
-              v-for="(n, i) in 6"
+              v-for="(_, i) in 6"
               :key="i"
               maxlength="1"
               v-model="otp[i]"
@@ -87,13 +87,11 @@
             {{ loading ? "Verifying..." : "Verify OTP" }}
           </button>
 
-          <!-- REMEMBER DEVICE -->
           <label class="flex items-center justify-center gap-2 mt-3">
             <input type="checkbox" v-model="rememberDevice" />
             <span class="text-sm text-gray-600">Remember this device</span>
           </label>
 
-          <!-- RESEND BUTTON -->
           <p class="text-center mt-4 text-gray-600">
             Didn't receive the code?
             <button
@@ -117,7 +115,6 @@
             {{ errorMessage }}
           </p>
         </div>
-
       </div>
     </div>
   </div>
@@ -130,6 +127,7 @@ export default {
   data() {
     return {
       rememberDevice: false,
+
       tick: 0,
 
       resendCount: 0,
@@ -157,14 +155,14 @@ export default {
 
   computed: {
     formattedLockout() {
-      this.tick; // trigger reactivity
+      this.tick; // reactivity
       if (!this.lockoutUntil) return "";
 
       const diff = this.lockoutUntil - Date.now();
       const sec = Math.max(0, Math.ceil(diff / 1000));
 
-      const m = Math.floor(sec / 60).toString().padStart(2, "0");
-      const s = (sec % 60).toString().padStart(2, "0");
+      const m = String(Math.floor(sec / 60)).padStart(2, "0");
+      const s = String(sec % 60).padStart(2, "0");
 
       return `${m}:${s}`;
     }
@@ -173,7 +171,6 @@ export default {
   mounted() {
     this.checkLockout();
 
-    // Remove session-based trusted device on browser close
     window.addEventListener("beforeunload", () => {
       if (localStorage.getItem("trusted_device") === "session") {
         localStorage.removeItem("trusted_device");
@@ -183,11 +180,10 @@ export default {
   },
 
   methods: {
-    /* -----------------------------
-       CHECK LOCKOUT
-    ----------------------------- */
+    /* ---------------------- CHECK LOCKOUT ---------------------- */
     checkLockout() {
       const stored = localStorage.getItem("otp_lockout_until");
+
       if (stored && Date.now() < Number(stored)) {
         this.lockoutUntil = Number(stored);
         this.lockedOut = true;
@@ -201,6 +197,7 @@ export default {
       this.lockedOut = true;
 
       localStorage.setItem("otp_lockout_until", this.lockoutUntil);
+
       this.startLockoutTimer();
     },
 
@@ -210,28 +207,22 @@ export default {
       this.lockoutTimer = setInterval(() => {
         if (Date.now() >= this.lockoutUntil) {
           clearInterval(this.lockoutTimer);
-          this.lockoutTimer = null;
 
           this.lockedOut = false;
           this.resendCount = 0;
           this.otpAttempts = 0;
 
           localStorage.removeItem("otp_lockout_until");
-          this.$forceUpdate();
           return;
         }
-
         this.tick++;
       }, 1000);
     },
 
-    /* -----------------------------
-       LOGIN — STEP 1
-    ----------------------------- */
+    /* ---------------------- LOGIN STEP 1 ---------------------- */
     async login() {
       if (this.lockedOut) return;
 
-      // Clear session-based trust
       if (localStorage.getItem("trusted_device") === "session") {
         localStorage.removeItem("trusted_device");
         localStorage.removeItem("admin_verified");
@@ -246,7 +237,6 @@ export default {
       this.errorMessage = "";
 
       const { $supabase } = useNuxtApp();
-
       const { error } = await $supabase.auth.signInWithPassword({
         email: this.email,
         password: this.password,
@@ -259,20 +249,20 @@ export default {
         return;
       }
 
-      // If trusted device → SKIP OTP
+      // SKIP OTP IF TRUSTED DEVICE
       if (localStorage.getItem("trusted_device") === "true") {
         localStorage.setItem("admin_verified", "true");
-        this.$emit("loginSuccess");
+        this.$emit("loginSuccess", true);
         return;
       }
 
-      // Generate OTP
+      // GENERATE OTP
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       this.generatedOtp = otpCode;
 
       const res = await $fetch("/api/send-otp", {
         method: "POST",
-        body: { email: this.email, otp: otpCode },
+        body: { email: this.email, otp: otpCode }
       });
 
       if (!res.success) {
@@ -288,11 +278,10 @@ export default {
       });
     },
 
-    /* -----------------------------
-       RESEND OTP
-    ----------------------------- */
+    /* ---------------------- RESEND OTP ---------------------- */
     async resendOtp() {
-      if (this.lockedOut || this.resendCooldown > 0) return;
+      if (this.lockedOut) return;
+      if (this.resendCooldown > 0) return;
 
       if (this.resendCount >= this.maxResendCount) {
         this.triggerLockout();
@@ -319,6 +308,7 @@ export default {
       }
 
       this.resendCount++;
+
       if (this.resendCount >= this.maxResendCount) {
         this.triggerLockout();
         return;
@@ -332,9 +322,6 @@ export default {
       this.startCooldown();
     },
 
-    /* -----------------------------
-       RESEND COOLDOWN
-    ----------------------------- */
     startCooldown() {
       this.resendCooldown = 30;
 
@@ -350,9 +337,7 @@ export default {
       }, 1000);
     },
 
-    /* -----------------------------
-       OTP NEXT / BACKSPACE
-    ----------------------------- */
+    /* ---------------------- OTP BOX MOVEMENT ---------------------- */
     nextBox(i, event) {
       if (this.otp[i].length === 1 && i < 5) {
         this.$refs.otpBoxes[i + 1].focus();
@@ -368,9 +353,7 @@ export default {
       }
     },
 
-    /* -----------------------------
-       VERIFY OTP — STEP 2
-    ----------------------------- */
+    /* ---------------------- VERIFY OTP ---------------------- */
     async verifyOtp() {
       if (this.lockedOut) return;
 
@@ -395,17 +378,16 @@ export default {
         return;
       }
 
-      // Save trusted or session-only device
+      // REMEMBER DEVICE
       if (this.rememberDevice) {
         localStorage.setItem("trusted_device", "true");
       } else {
         localStorage.setItem("trusted_device", "session");
       }
 
-      // Mark admin verified
       localStorage.setItem("admin_verified", "true");
 
-      this.$emit("loginSuccess");
+      this.$emit("loginSuccess", true);
     },
   },
 
@@ -432,8 +414,7 @@ export default {
 }
 
 @keyframes float {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0);
   }
   50% {
