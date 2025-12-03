@@ -229,9 +229,13 @@ export default {
     const { data } = await $supabase.auth.getSession();
     const supaSession = data.session;
 
-    const verified = localStorage.getItem("admin_verified") === "true";
+    const trusted = localStorage.getItem("trusted_device") === "true";
 
-    if (!supaSession || !verified) {
+    const temporary = sessionStorage.getItem("temporary_trust") === "true";
+    
+    const verified = localStorage.getItem("temporary_trust") === "true";
+
+    if (!supaSession || !verified || (!trusted && !temporary)) {
       this.session = null;
       return;
     }

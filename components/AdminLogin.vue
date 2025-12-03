@@ -18,29 +18,18 @@
 
           <div class="mb-4">
             <label class="text-sm font-semibold text-gray-700">Email</label>
-            <input
-              v-model="email"
-              type="email"
-              placeholder="Enter admin email"
-              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500"
-            />
+            <input v-model="email" type="email" placeholder="Enter admin email"
+              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500" />
           </div>
 
           <div class="mb-6">
             <label class="text-sm font-semibold text-gray-700">Password</label>
-            <input
-              v-model="password"
-              type="password"
-              placeholder="Enter password"
-              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500"
-            />
+            <input v-model="password" type="password" placeholder="Enter password"
+              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500" />
           </div>
 
-          <button
-            @click="login"
-            :disabled="loading || lockedOut"
-            class="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition shadow-lg disabled:opacity-50"
-          >
+          <button @click="login" :disabled="loading || lockedOut"
+            class="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition shadow-lg disabled:opacity-50">
             {{ loading ? "Logging in..." : "Login" }}
           </button>
 
@@ -67,44 +56,34 @@
           </p>
 
           <div class="flex justify-center gap-3 mb-6">
-            <input
-              v-for="(_, i) in 6"
-              :key="i"
-              maxlength="1"
-              v-model="otp[i]"
-              ref="otpBoxes"
-              @input="(e) => nextBox(i, e)"
-              :disabled="lockedOut"
-              class="w-12 h-12 border text-center text-xl rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-200 disabled:cursor-not-allowed"
-            />
+            <input v-for="(_, i) in 6" :key="i" maxlength="1" v-model="otp[i]" ref="otpBoxes"
+              @input="(e) => nextBox(i, e)" :disabled="lockedOut"
+              class="w-12 h-12 border text-center text-xl rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-200 disabled:cursor-not-allowed" />
           </div>
 
-          <button
-            @click="verifyOtp"
-            :disabled="loading || lockedOut"
-            class="w-full bg-green-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
-          >
+          <button @click="verifyOtp" :disabled="loading || lockedOut"
+            class="w-full bg-green-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-green-700 transition disabled:opacity-50">
             {{ loading ? "Verifying..." : "Verify OTP" }}
           </button>
 
+          <!-- REMEMBER DEVICE -->
           <label class="flex items-center justify-center gap-2 mt-3">
             <input type="checkbox" v-model="rememberDevice" />
             <span class="text-sm text-gray-600">Remember this device</span>
           </label>
 
+          <!-- RESEND OTP -->
           <p class="text-center mt-4 text-gray-600">
             Didn't receive the code?
-            <button
-              @click="resendOtp"
+            <button @click="resendOtp"
               :disabled="lockedOut || resendCooldown > 0 || loading || resendCount >= maxResendCount"
-              class="text-blue-600 font-semibold disabled:text-gray-400 ml-2"
-            >
+              class="text-blue-600 font-semibold disabled:text-gray-400 ml-2">
               Resend OTP
             </button>
           </p>
 
           <p v-if="resendCount >= maxResendCount" class="text-center text-red-500 text-sm mt-2">
-            Maximum resend limit reached. Please try again later.
+            Maximum resend limit reached.
           </p>
 
           <p v-if="resendCooldown > 0" class="text-center text-gray-500 text-sm mt-2">
@@ -114,8 +93,10 @@
           <p v-if="errorMessage && !lockedOut" class="mt-4 text-red-600 text-center font-semibold">
             {{ errorMessage }}
           </p>
+
         </div>
       </div>
+
     </div>
   </div>
 </template>
@@ -126,61 +107,62 @@ export default {
 
   data() {
     return {
-      rememberDevice: false,
-
-      tick: 0,
-
-      resendCount: 0,
-      maxResendCount: 3,
-
-      otpAttempts: 0,
-      maxOtpAttempts: 3,
-
-      resendCooldown: 0,
-      cooldownInterval: null,
-
-      lockoutUntil: null,
-      lockedOut: false,
-      lockoutTimer: null,
-
       step: "login",
       email: "",
       password: "",
       otp: ["", "", "", "", "", ""],
       generatedOtp: "",
+
+      rememberDevice: false,
+
       loading: false,
       errorMessage: "",
+
+      // lockout
+      resendCount: 0,
+      maxResendCount: 3,
+      resendCooldown: 0,
+      cooldownInterval: null,
+
+      otpAttempts: 0,
+      maxOtpAttempts: 3,
+
+      lockedOut: false,
+      lockoutUntil: null,
+      lockoutTimer: null,
+
+      tick: 0,
     };
   },
 
   computed: {
     formattedLockout() {
-      this.tick; // reactivity
-      if (!this.lockoutUntil) return "";
+      this.tick; // trigger reactive update
 
+      if (!this.lockoutUntil) return "";
       const diff = this.lockoutUntil - Date.now();
       const sec = Math.max(0, Math.ceil(diff / 1000));
 
       const m = String(Math.floor(sec / 60)).padStart(2, "0");
       const s = String(sec % 60).padStart(2, "0");
-
       return `${m}:${s}`;
-    }
+    },
   },
 
   mounted() {
     this.checkLockout();
 
     window.addEventListener("beforeunload", () => {
-      if (localStorage.getItem("trusted_device") === "session") {
-        localStorage.removeItem("trusted_device");
-        localStorage.removeItem("admin_verified");
-      }
-    });
+    // Only unset if temporary trust (not remembered)
+    if (sessionStorage.getItem("temporary_trust") === "true") {
+      sessionStorage.removeItem("temporary_trust");
+      localStorage.removeItem("admin_verified");
+    }
+  });
   },
 
   methods: {
-    /* ---------------------- CHECK LOCKOUT ---------------------- */
+    /* ----------------------- LOCKOUT ----------------------- */
     checkLockout() {
       const stored = localStorage.getItem("otp_lockout_until");
 
@@ -197,7 +179,6 @@ export default {
       this.lockedOut = true;
 
       localStorage.setItem("otp_lockout_until", this.lockoutUntil);
-
       this.startLockoutTimer();
     },
 
@@ -207,11 +188,9 @@ export default {
       this.lockoutTimer = setInterval(() => {
         if (Date.now() >= this.lockoutUntil) {
           clearInterval(this.lockoutTimer);
-
           this.lockedOut = false;
           this.resendCount = 0;
           this.otpAttempts = 0;
-
           localStorage.removeItem("otp_lockout_until");
           return;
         }
@@ -219,14 +198,9 @@ export default {
       }, 1000);
     },
 
-    /* ---------------------- LOGIN STEP 1 ---------------------- */
+    /* ----------------------- LOGIN STEP ----------------------- */
     async login() {
       if (this.lockedOut) return;
-
-      if (localStorage.getItem("trusted_device") === "session") {
-        localStorage.removeItem("trusted_device");
-        localStorage.removeItem("admin_verified");
-      }
 
       if (!this.email || !this.password) {
         this.errorMessage = "Please fill in all fields.";
@@ -249,20 +223,27 @@ export default {
         return;
       }
 
-      // SKIP OTP IF TRUSTED DEVICE
+      // Skip OTP if device is trusted
       if (localStorage.getItem("trusted_device") === "true") {
         localStorage.setItem("admin_verified", "true");
         this.$emit("loginSuccess", true);
         return;
       }
 
-      // GENERATE OTP
+      // If user has temporary trust (browser not closed yet)
+      if (sessionStorage.getItem("temporary_trust") === "true") {
+        localStorage.setItem("admin_verified", "true");
+        this.$emit("loginSuccess", true);
+        return;
+      }
+
+      // Otherwise → generate OTP
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       this.generatedOtp = otpCode;
 
       const res = await $fetch("/api/send-otp", {
         method: "POST",
-        body: { email: this.email, otp: otpCode }
+        body: { email: this.email, otp: otpCode },
       });
 
       if (!res.success) {
@@ -278,7 +259,7 @@ export default {
       });
     },
 
-    /* ---------------------- RESEND OTP ---------------------- */
+    /* ----------------------- RESEND OTP ----------------------- */
     async resendOtp() {
       if (this.lockedOut) return;
       if (this.resendCooldown > 0) return;
@@ -315,10 +296,7 @@ export default {
       }
 
       this.otp = ["", "", "", "", "", ""];
-      this.$nextTick(() => {
-        this.$refs.otpBoxes[0]?.focus();
-      });
-
+      this.$nextTick(() => this.$refs.otpBoxes[0]?.focus());
       this.startCooldown();
     },
 
@@ -332,28 +310,25 @@ export default {
           this.resendCooldown--;
         } else {
           clearInterval(this.cooldownInterval);
-          this.cooldownInterval = null;
         }
       }, 1000);
     },
 
-    /* ---------------------- OTP BOX MOVEMENT ---------------------- */
+    /* ----------------------- OTP NAVIGATION ----------------------- */
     nextBox(i, event) {
       if (this.otp[i].length === 1 && i < 5) {
         this.$refs.otpBoxes[i + 1].focus();
       }
 
-      if (
-        event &&
+      if (event &&
         event.inputType === "deleteContentBackward" &&
         this.otp[i] === "" &&
-        i > 0
-      ) {
+        i > 0) {
         this.$refs.otpBoxes[i - 1].focus();
       }
     },
 
-    /* ---------------------- VERIFY OTP ---------------------- */
+    /* ----------------------- VERIFY OTP ----------------------- */
     async verifyOtp() {
       if (this.lockedOut) return;
 
@@ -378,11 +353,11 @@ export default {
         return;
       }
 
-      // REMEMBER DEVICE
+      // DEVICE TRUST LOGIC
       if (this.rememberDevice) {
         localStorage.setItem("trusted_device", "true");
       } else {
-        localStorage.setItem("trusted_device", "session");
+        sessionStorage.setItem("temporary_trust", "true");
       }
 
       localStorage.setItem("admin_verified", "true");
@@ -400,28 +375,14 @@ export default {
 
 <style scoped>
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.animate-fadeIn {
-  animation: fadeIn 0.8s ease;
-}
+.animate-fadeIn { animation: fadeIn 0.8s ease; }
 
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
+.animate-float { animation: float 3s ease-in-out infinite; }
 </style>
