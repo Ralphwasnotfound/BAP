@@ -44,10 +44,7 @@
             {{ loading ? "Logging in..." : "Login" }}
           </button>
 
-          <p
-            v-if="lockedOut"
-            class="mt-4 text-red-600 text-center font-semibold"
-          >
+          <p v-if="lockedOut" class="mt-4 text-red-600 text-center font-semibold">
             Too many attempts. Try again in {{ formattedLockout }}.
           </p>
 
@@ -60,11 +57,7 @@
         <div v-else-if="step === 'otp'">
           <h2 class="text-3xl font-bold text-gray-800 text-center mb-8">Enter OTP</h2>
 
-          <!-- LOCKOUT MESSAGE -->
-          <p
-            v-if="lockedOut"
-            class="text-center text-red-600 font-semibold mb-4"
-          >
+          <p v-if="lockedOut" class="text-center text-red-600 font-semibold mb-4">
             Too many attempts. Try again in {{ formattedLockout }}.
           </p>
 
@@ -93,6 +86,12 @@
           >
             {{ loading ? "Verifying..." : "Verify OTP" }}
           </button>
+
+          <!-- REMEMBER DEVICE -->
+          <label class="flex items-center justify-center gap-2 mt-3">
+            <input type="checkbox" v-model="rememberDevice" />
+            <span class="text-sm text-gray-600">Remember this device</span>
+          </label>
 
           <!-- RESEND BUTTON -->
           <p class="text-center mt-4 text-gray-600">
@@ -130,6 +129,9 @@ export default {
 
   data() {
     return {
+      rememberDevice: false,
+      tick: 0,
+
       resendCount: 0,
       maxResendCount: 3,
 
@@ -155,26 +157,37 @@ export default {
 
   computed: {
     formattedLockout() {
+      this.tick; // trigger reactivity
       if (!this.lockoutUntil) return "";
+
       const diff = this.lockoutUntil - Date.now();
       const sec = Math.max(0, Math.ceil(diff / 1000));
+
       const m = Math.floor(sec / 60).toString().padStart(2, "0");
       const s = (sec % 60).toString().padStart(2, "0");
+
       return `${m}:${s}`;
     }
   },
 
   mounted() {
     this.checkLockout();
+
+    // Remove session-based trusted device on browser close
+    window.addEventListener("beforeunload", () => {
+      if (localStorage.getItem("trusted_device") === "session") {
+        localStorage.removeItem("trusted_device");
+        localStorage.removeItem("admin_verified");
+      }
+    });
   },
 
   methods: {
     /* -----------------------------
-       CHECK LOCKOUT ON LOAD
+       CHECK LOCKOUT
     ----------------------------- */
     checkLockout() {
       const stored = localStorage.getItem("otp_lockout_until");
-
       if (stored && Date.now() < Number(stored)) {
         this.lockoutUntil = Number(stored);
         this.lockedOut = true;
@@ -182,20 +195,15 @@ export default {
       }
     },
 
-    /* -----------------------------
-       START LOCKOUT FOR 5 MINUTES
-    ----------------------------- */
     triggerLockout() {
       const fiveMin = 5 * 60 * 1000;
       this.lockoutUntil = Date.now() + fiveMin;
       this.lockedOut = true;
 
       localStorage.setItem("otp_lockout_until", this.lockoutUntil);
-
       this.startLockoutTimer();
     },
 
-    /* Timer that counts down */
     startLockoutTimer() {
       if (this.lockoutTimer) clearInterval(this.lockoutTimer);
 
@@ -209,19 +217,25 @@ export default {
           this.otpAttempts = 0;
 
           localStorage.removeItem("otp_lockout_until");
-          this.$forceUpdate()
-          return
+          this.$forceUpdate();
+          return;
         }
 
-        this.$forceUpdate()
+        this.tick++;
       }, 1000);
     },
 
     /* -----------------------------
-       STEP 1 — PASSWORD LOGIN
+       LOGIN — STEP 1
     ----------------------------- */
     async login() {
       if (this.lockedOut) return;
+
+      // Clear session-based trust
+      if (localStorage.getItem("trusted_device") === "session") {
+        localStorage.removeItem("trusted_device");
+        localStorage.removeItem("admin_verified");
+      }
 
       if (!this.email || !this.password) {
         this.errorMessage = "Please fill in all fields.";
@@ -238,23 +252,28 @@ export default {
         password: this.password,
       });
 
+      this.loading = false;
+
       if (error) {
-        this.loading = false;
         this.errorMessage = "Invalid email or password.";
         return;
       }
 
-      /* GENERATE OTP */
+      // If trusted device → SKIP OTP
+      if (localStorage.getItem("trusted_device") === "true") {
+        localStorage.setItem("admin_verified", "true");
+        this.$emit("loginSuccess");
+        return;
+      }
+
+      // Generate OTP
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       this.generatedOtp = otpCode;
 
-      /* SEND OTP */
       const res = await $fetch("/api/send-otp", {
         method: "POST",
         body: { email: this.email, otp: otpCode },
       });
-
-      this.loading = false;
 
       if (!res.success) {
         this.errorMessage = "Failed to send OTP email.";
@@ -262,7 +281,6 @@ export default {
       }
 
       this.step = "otp";
-
       this.startCooldown();
 
       this.$nextTick(() => {
@@ -274,8 +292,7 @@ export default {
        RESEND OTP
     ----------------------------- */
     async resendOtp() {
-      if (this.lockedOut) return;
-      if (this.resendCooldown > 0) return;
+      if (this.lockedOut || this.resendCooldown > 0) return;
 
       if (this.resendCount >= this.maxResendCount) {
         this.triggerLockout();
@@ -286,45 +303,37 @@ export default {
       this.loading = true;
       this.otpAttempts = 0;
 
-      try {
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-        this.generatedOtp = otpCode;
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      this.generatedOtp = otpCode;
 
-        const res = await $fetch("/api/send-otp", {
-          method: "POST",
-          body: { email: this.email, otp: otpCode },
-        });
+      const res = await $fetch("/api/send-otp", {
+        method: "POST",
+        body: { email: this.email, otp: otpCode },
+      });
 
-        if (!res || res.success === false) {
-          this.errorMessage = "Failed to resend OTP. Please try again later.";
-          this.loading = false;
-          return;
-        }
+      this.loading = false;
 
-        this.resendCount++;
-
-        if (this.resendCount >= this.maxResendCount) {
-          this.triggerLockout();
-          this.loading = false;
-          return;
-        }
-
-        this.otp = ["", "", "", "", "", ""];
-        this.$nextTick(() => {
-          this.$refs.otpBoxes[0]?.focus();
-        });
-
-        this.startCooldown();
-      } catch (err) {
-        console.error("Resend OTP error:", err);
+      if (!res || res.success === false) {
         this.errorMessage = "Failed to resend OTP.";
-      } finally {
-        this.loading = false;
+        return;
       }
+
+      this.resendCount++;
+      if (this.resendCount >= this.maxResendCount) {
+        this.triggerLockout();
+        return;
+      }
+
+      this.otp = ["", "", "", "", "", ""];
+      this.$nextTick(() => {
+        this.$refs.otpBoxes[0]?.focus();
+      });
+
+      this.startCooldown();
     },
 
     /* -----------------------------
-       COOLDOWN TIMER
+       RESEND COOLDOWN
     ----------------------------- */
     startCooldown() {
       this.resendCooldown = 30;
@@ -342,11 +351,9 @@ export default {
     },
 
     /* -----------------------------
-       OTP INPUT MOVEMENT
+       OTP NEXT / BACKSPACE
     ----------------------------- */
     nextBox(i, event) {
-      if (this.lockedOut) return;
-
       if (this.otp[i].length === 1 && i < 5) {
         this.$refs.otpBoxes[i + 1].focus();
       }
@@ -362,7 +369,7 @@ export default {
     },
 
     /* -----------------------------
-       STEP 2 — VERIFY OTP
+       VERIFY OTP — STEP 2
     ----------------------------- */
     async verifyOtp() {
       if (this.lockedOut) return;
@@ -388,9 +395,17 @@ export default {
         return;
       }
 
-      /* SUCCESS */
+      // Save trusted or session-only device
+      if (this.rememberDevice) {
+        localStorage.setItem("trusted_device", "true");
+      } else {
+        localStorage.setItem("trusted_device", "session");
+      }
+
+      // Mark admin verified
       localStorage.setItem("admin_verified", "true");
-      this.$emit("loginSuccess", true);
+
+      this.$emit("loginSuccess");
     },
   },
 
