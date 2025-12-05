@@ -4,7 +4,7 @@
     <!-- 🔵 SIDEBAR COMPONENT -->
     <AdminSideBar @logout="showLogout = true" />
 
-    <!-- 🔶 MAIN CONTENT (push right because sidebar is fixed width) -->
+    <!-- 🔶 MAIN CONTENT -->
     <main class="flex-1 ml-64 p-6 max-w-5xl">
       <h1 class="text-3xl font-bold mb-6">People Directory</h1>
 
@@ -42,7 +42,6 @@
             <th class="p-2 border">Region</th>
             <th class="p-2 border">Designation</th>
             <th class="p-2 border">Chapter</th>
-            <th class="p-2 border">Expiry</th>
             <th class="p-2 border">Valid Until</th>
             <th class="p-2 border">Actions</th>
           </tr>
@@ -51,17 +50,24 @@
         <tbody>
           <tr v-for="p in people" :key="p.id">
             <td class="p-2 border text-center">
-              <img v-if="p.picture_url" :src="p.picture_url" class="w-10 h-10 rounded-full object-cover mx-auto" />
+              <img
+                v-if="p.picture_url"
+                :src="p.picture_url"
+                class="w-10 h-10 rounded-full object-cover mx-auto"
+              />
               <span v-else>No Photo</span>
             </td>
 
-            <td class="p-2 border">{{ p.first_name }} {{ p.middle_initial }}. {{ p.last_name }}</td>
+            <td class="p-2 border">
+              {{ formatFullName(p) }}
+            </td>
+
             <td class="p-2 border">{{ p.work_id }}</td>
             <td class="p-2 border">{{ p.region }}</td>
             <td class="p-2 border">{{ p.designation }}</td>
             <td class="p-2 border">{{ p.chapter }}</td>
 
-            <td class="p-2 border">{{ formatFullDate(p.expiry_date) }}</td>
+            <!-- REMOVED EXPIRY COLUMN -->
             <td class="p-2 border">{{ formatMonthYear(p.valid_until) }}</td>
 
             <td class="p-2 border text-center">
@@ -72,7 +78,8 @@
                 class="px-2 py-1 text-white rounded"
                 :class="downloadLock ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600'"
                 :disabled="downloadLock"
-                @click="downloadPDF(p)">
+                @click="downloadPDF(p)"
+              >
                 PDF
               </button>
             </td>
@@ -118,9 +125,10 @@
       />
 
       <ReDownloadConfirm 
-      :show="reDownloadModal"
-      @close="reDownloadModal = false; downloadLock = false"
-      @confirm="confirmReDownload"/>
+        :show="reDownloadModal"
+        @close="reDownloadModal = false; downloadLock = false"
+        @confirm="confirmReDownload"
+      />
 
       <LogoutConfirm
         :show="showLogout"
@@ -128,7 +136,7 @@
         @confirm="confirmLogout"
       />
 
-      <!-- PDF TEMPLATE (hidden but ALWAYS renders properly) -->
+      <!-- PDF TEMPLATE -->
       <div style="opacity:0; pointer-events:none; position:absolute; z-index:-1;">
         <PeopleForm ref="PeopleForm" />
       </div>
@@ -179,9 +187,8 @@ export default {
       photoFile: null,
 
       downloadLock: false,
-
       reDownloadModal: false,
-      pdfTargetPerson: null
+      pdfTargetPerson: null,
     }
   },
 
@@ -192,6 +199,19 @@ export default {
   },
 
   methods: {
+    formatFullName(p) {
+  const mi = p.middle_initial ? p.middle_initial + ". " : "";
+  const suffix = p.suffix ? " " + p.suffix + ". ": "";
+  return `${p.first_name} ${mi}${p.last_name}${suffix}`;
+},
+
+
+    showNotification(title, message, type = "success") {
+  this.noticeTitle = title
+  this.noticeMessage = message
+  this.noticeType = type
+  this.showNotice = true
+},
     /* ---------------- SECURITY CHECK ---------------- */
     async checkAdmin() {
       const { data } = await this.$supabase.auth.getSession()
@@ -204,11 +224,10 @@ export default {
       }
     },
 
-    /* ---------------- PDF EXPORT ---------------- */
+    /* ---------------- PDF DOWNLOAD ---------------- */
     async downloadPDF(person) {
       const key = `downloaded_${person.id}`
 
-      // If PDF already downloaded this session -> show confirm modal
       if (sessionStorage.getItem(key)) {
         this.pdfTargetPerson = person
         this.reDownloadModal = true
@@ -216,38 +235,30 @@ export default {
         return
       }
 
-      // Normal first-time download
       await this.performPDFDownload(person)
 
-      // Mark as download
       sessionStorage.setItem(key, "true")
     },
 
     async performPDFDownload(person) {
       this.downloadLock = true 
 
-      this.showNotification("Generating PDF", "Please wait while we create your file.", "success")
+      this.showNotification("Generating PDF", "Please wait...", "success")
 
       try {
         await this.$refs.PeopleForm.exportPersonPDF(person)
-
-        this.showNotification("PDF Ready", "Your download has started.", "success")
-
+        this.showNotification("PDF Ready", "Download started.", "success")
       } catch (err) {
         console.error(err)
         this.showNotification("Error", "Failed to generate PDF.", "error")
       }
       
-      setTimeout(() => {
-        this.downloadLock = false
-      }, 2000)
+      setTimeout(() => (this.downloadLock = false), 2000)
     },
 
     async confirmReDownload() {
       if (!this.pdfTargetPerson) return
-
       await this.performPDFDownload(this.pdfTargetPerson)
-
       this.reDownloadModal = false
     },
 
@@ -265,7 +276,7 @@ export default {
       if (this.searchQuery.trim()) {
         const s = this.searchQuery.trim()
         query = query.or(
-          `first_name.ilike.%${s}%,middle_initial.ilike.%${s}%,last_name.ilike.%${s}%,work_id.ilike.%${s}%,region.ilike.%${s}%,designation.ilike.%${s}%,chapter.ilike.%${s}%`
+          `first_name.ilike.%${s}%,middle_initial.ilike.%${s}%,last_name.ilike.%${s}%,suffix.ilike.%${s}%,work_id.ilike.%${s}%,region.ilike.%${s}%,designation.ilike.%${s}%,chapter.ilike.%${s}%`
         )
       }
 
@@ -293,14 +304,6 @@ export default {
       }
     },
 
-    /* ---------------- NOTIFICATION ---------------- */
-    showNotification(title, message, type = "success") {
-      this.noticeTitle = title
-      this.noticeMessage = message
-      this.noticeType = type
-      this.showNotice = true
-    },
-
     /* ---------------- MODAL LOGIC ---------------- */
     openAddModal() {
       this.isEditing = false
@@ -315,7 +318,6 @@ export default {
         designation: "",
         chapter: "",
         valid_until: "",
-        expiry_date: "",
         emergency_name: "",
         emergency_cp: "",
         emergency_address: "",
@@ -371,18 +373,19 @@ export default {
 
     async addPerson() {
       const picture_url = await this.uploadPhoto()
+
       const { full_name, ...cleanData } = this.form
 
       await this.$supabase.from("people").insert([{ ...cleanData, picture_url }])
 
       this.showNotification("Success!", "Person added successfully!", "success")
-
       this.closeModal()
       this.loadPeople()
     },
 
     async updatePerson() {
       const picture_url = await this.uploadPhoto()
+
       const { full_name, ...cleanData } = this.form
 
       await this.$supabase.from("people")
@@ -406,39 +409,40 @@ export default {
 
     /* ---------------- EXPORT ---------------- */
     exportCSV() {
-      if (!this.people.length) return
+  if (!this.people.length) return;
 
-      let csv = "Full Name,Work ID,Region,Designation,Expiry\n"
+  let csv = "Full Name,Work ID,Region,Designation,Valid Until\n";
 
-      this.people.forEach(p => {
-        csv += `${p.last_name}, ${p.first_name} ${p.middle_initial},${p.work_id},${p.region},${p.designation},${p.expiry_date}\n`
-      })
+  this.people.forEach(p => {
+    csv += `${this.formatFullName(p)},${p.work_id},${p.region},${p.designation},${p.valid_until}\n`;
+  });
 
-      const blob = new Blob([csv], { type: "text/csv" })
-      const url = URL.createObjectURL(blob)
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
 
-      const a = document.createElement("a")
-      a.href = url
-      a.download = "people.csv"
-      a.click()
-    },
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "people.csv";
+  a.click();
+},
+
 
     exportExcel() {
       let table = `
         <table>
           <tr>
             <th>Name</th><th>Work ID</th>
-            <th>Region</th><th>Designation</th><th>Expiry</th>
+            <th>Region</th><th>Designation</th><th>Valid Until</th>
           </tr>
           ${this.people
             .map(
               p => `
             <tr>
-              <td>${p.first_name} ${p.middle_initial}. ${p.last_name}</td>
+              <td>${this.formatFullName}</td>
               <td>${p.work_id}</td>
               <td>${p.region}</td>
               <td>${p.designation}</td>
-              <td>${p.expiry_date}</td>
+              <td>${p.valid_until}</td>
             </tr>`
             )
             .join("")}
@@ -460,24 +464,12 @@ export default {
       return d.toLocaleString("en-US", { month: "long", year: "numeric" })
     },
 
-    formatFullDate(value) {
-      if (!value) return ""
-      const d = new Date(value)
-      return d.toLocaleString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric"
-      })
-    },
     confirmLogout() {
       this.showLogout = false;
-
       const { $supabase } = useNuxtApp();
       $supabase.auth.signOut();
-
       localStorage.removeItem("admin_verified");
       sessionStorage.removeItem("temporary_trust");
-
       this.$router.push("/login");
     }
   }

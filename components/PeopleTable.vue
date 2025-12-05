@@ -56,7 +56,7 @@
               <span v-else class="text-gray-500 text-sm">No Photo</span>
             </td>
 
-            <td class="p-2 border">{{ p.first_name }} {{ p.middle_initial }}. {{ p.last_name }}</td>
+            <td class="p-2 border">{{ formatFullName(p) }}</td>
             <td class="p-2 border">{{ p.work_id }}</td>
             <td class="p-2 border">{{ p.region }}</td>
             <td class="p-2 border">{{ p.designation }}</td>
@@ -130,7 +130,7 @@ export default {
 
       return this.people.filter((p) => {
         const matchesSearch = [
-          `${p.first_name} ${p.middle_initial} ${p.last_name}`,
+          this.formatFullName(p),
           p.work_id,
           p.chapter,
           p.region,
@@ -174,6 +174,11 @@ export default {
   },
 
   methods: {
+    formatFullName(p) {
+  const mi = p.middle_initial ? p.middle_initial + ". " : "";
+  const suffix = p.suffix ? " " + p.suffix : "";
+  return `${p.first_name} ${mi}${p.last_name}${suffix}`;
+},
     async loadPeople() {
       const { data } = await this.$supabase.from("people").select("*");
       if (data) {
@@ -191,27 +196,44 @@ export default {
       if (this.currentPage > 1) this.currentPage--;
     },
 
-    getValidColor(validUntil) {
-      if (!validUntil) return "";
+   getValidColor(validUntil) {
+  if (!validUntil) return "";
 
-      const today = new Date();
-      const currentMonth = today.getMonth();
-      const currentYear = today.getFullYear();
+  const today = new Date();
 
-      const d = new Date(validUntil);
-      const expMonth = d.getMonth();
-      const expYear = d.getFullYear();
+  // Extract ONLY year + month for today
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth(); // 0–11
 
-      if (expYear < currentYear || (expYear === currentYear && expMonth < currentMonth)) {
-        return "text-red-600 font-bold"; // expired
-      }
+  // Extract ONLY year + month for expiration
+  const expDate = new Date(validUntil);
+  const expYear = expDate.getFullYear();
+  const expMonth = expDate.getMonth();
 
-      if (expYear === currentYear && expMonth === currentMonth) {
-        return "text-yellow-600 font-bold"; // expiring this month
-      }
+  // Convert to total months for easy comparison
+  const todayTotal = currentYear * 12 + currentMonth;
+  const expTotal = expYear * 12 + expMonth;
 
-      return "text-green-600 font-bold"; // valid future
-    },
+  const diffMonths = expTotal - todayTotal;
+
+  // EXPIRED (month-year earlier than today)
+  if (diffMonths < 0) {
+    return "text-red-600 font-bold";
+  }
+
+  if (diffMonths === 0) {
+    return "text-red-600 font-bold";
+  }
+
+  // ALMOST EXPIRED (within 2 months)
+  if (diffMonths <= 2) {
+    return "text-yellow-600 font-bold";
+  }
+
+  // STILL VALID
+  return "text-green-600 font-bold";
+},
+
 
     formatMonthYear(date) {
       if (!date) return "";

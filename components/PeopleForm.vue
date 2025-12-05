@@ -30,31 +30,43 @@
 
         <!-- NAME BLOCK -->
         <div>
-          <div class="flex items-center gap-2 whitespace-nowrap">
-            <span class="font-bold w-20">NAME:</span>
+  <div class="flex items-center gap-2 whitespace-nowrap">
+    <span class="font-bold w-20">NAME:</span>
 
-            <div class="flex-1 flex flex-col items-center">
-              <span class="border-b border-black w-full text-center pb-1 font-semibold text-[16px]">
-                {{ pdfData.first_name }}
-              </span>
-              <span class="text-[11px] italic font-semibold mt-1">FIRST NAME</span>
-            </div>
+    <!-- FIRST NAME -->
+    <div class="flex-1 flex flex-col items-center">
+      <span class="border-b border-black w-full text-center pb-1 font-semibold text-[16px]">
+        {{ pdfData.first_name }}
+      </span>
+      <span class="text-[11px] italic font-semibold mt-1">FIRST NAME</span>
+    </div>
 
-            <div class="w-16 flex flex-col items-center">
-              <span class="border-b border-black w-full text-center pb-1 font-semibold text-[16px]">
-                {{ pdfData.middle_initial }}
-              </span>
-              <span class="text-[11px] italic font-semibold mt-1">MI</span>
-            </div>
+    <!-- MIDDLE INITIAL -->
+    <div class="w-16 flex flex-col items-center">
+      <span class="border-b border-black w-full text-center pb-1 font-semibold text-[16px]">
+        {{ pdfData.middle_initial }}
+      </span>
+      <span class="text-[11px] italic font-semibold mt-1">MI</span>
+    </div>
 
-            <div class="flex-1 flex flex-col items-center">
-              <span class="border-b border-black w-full text-center pb-1 font-semibold text-[16px]">
-                {{ pdfData.last_name }}
-              </span>
-              <span class="text-[11px] italic font-semibold mt-1">SURNAME</span>
-            </div>
-          </div>
-        </div>
+    <!-- LAST NAME -->
+    <div class="flex-1 flex flex-col items-center">
+      <span class="border-b border-black w-full text-center pb-1 font-semibold text-[16px]">
+        {{ pdfData.last_name }}
+      </span>
+      <span class="text-[11px] italic font-semibold mt-1">SURNAME</span>
+    </div>
+
+    <!-- SUFFIX -->
+    <div class="w-20 flex flex-col items-center">
+      <span class="border-b border-black w-full text-center pb-1 font-semibold text-[16px]">
+        {{ pdfData.suffix }}
+      </span>
+      <span class="text-[11px] italic font-semibold mt-1">SUFFIX</span>
+    </div>
+  </div>
+</div>
+
 
         <!-- DESIGNATION -->
         <div class="flex items-center">
