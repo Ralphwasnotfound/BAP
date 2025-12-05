@@ -17,32 +17,41 @@
       @close="showLogout = false"
       @confirm="confirmLogout"
     />
-
   </div>
+  <LoadingModal :show="loading" :message="loadingMessage" />
 </template>
 
 <script>
 import AdminSideBar from '~/components/Admin/AdminSideBar.vue';
 import LogoutConfirm from "~/components/LogoutConfirm.vue";
+import LoadingModal from "~/components/Loading/LoadingModal.vue";
 
 export default {
   components: {
     AdminSideBar,
     LogoutConfirm,
+    LoadingModal
   },
 
   data() {
     return {
-      showLogout: false, // controls modal visibility
+      showLogout: false,
+      loading: false,
+      loadingMessage: "Please wait..."
     };
   },
 
   mounted() {
-    this.checkAdmin();
+    setTimeout(() => {
+      this.checkAdmin();
+    }, 50);
   },
 
   methods: {
     async checkAdmin() {
+      this.loading = true;
+      this.loadingMessage = "Checking admin session...";
+
       const { $supabase } = useNuxtApp();
       const { data } = await $supabase.auth.getSession();
 
@@ -50,14 +59,17 @@ export default {
       const trusted = localStorage.getItem("trusted_device") === "true";
       const temp = sessionStorage.getItem("temporary_trust") === "true";
 
+      this.loading = false;
+
       if (!data.session || !verified || (!trusted && !temp)) {
         this.$router.replace("/login");
       }
     },
 
-    // 🔵 Called when user CONFIRMS logout in modal
     async confirmLogout() {
       this.showLogout = false;
+      this.loading = true;
+      this.loadingMessage = "Logging out...";
 
       const { $supabase } = useNuxtApp();
       await $supabase.auth.signOut();
@@ -65,8 +77,10 @@ export default {
       localStorage.removeItem("admin_verified");
       sessionStorage.removeItem("temporary_trust");
 
+      this.loading = false;
       this.$router.replace("/login");
-    },
+    }
   }
-}
+};
 </script>
+

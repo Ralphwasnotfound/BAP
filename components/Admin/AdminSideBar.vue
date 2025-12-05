@@ -43,8 +43,8 @@
           Announcements
         </NuxtLink>
 
-        <NuxtLink to="/admin/export" class="block px-4 py-2 rounded" :class="isActive('/admin/export')">
-          Export Tools
+        <NuxtLink to="/admin/notification" class="block px-4 py-2 rounded" :class="isActive('/admin/notification')">
+          Notification
         </NuxtLink>
 
       </nav>

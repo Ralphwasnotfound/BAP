@@ -13,10 +13,19 @@
         <button class="px-4 py-2 bg-blue-600 text-white rounded" @click="openAddModal">
           + Add Person
         </button>
-        <button class="px-4 py-2 bg-green-600 text-white rounded" @click="exportCSV">
+        <button 
+        class="px-4 py-2 bg-green-600 text-white rounded"
+        @click="exportCSV"
+        :class="downloadCSVLock ? 'opacity-50 cursor-not-allowed' : ''"
+        :disabled="downloadCSVLock">
           Export CSV
         </button>
-        <button class="px-4 py-2 bg-yellow-500 text-white rounded" @click="exportExcel">
+        <button 
+        class="px-4 py-2 bg-yellow-500 text-white rounded" 
+        @click="exportExcel"
+        :class="downloadExcelLock ? 'opacity-50 cursor-not-allowed' : ''"
+        :disabled="downloadExcelLock"
+        >
           Export Excel
         </button>
       </div>
@@ -130,6 +139,20 @@
         @confirm="confirmReDownload"
       />
 
+      <ReDownloadConfirm
+        :show="reDownloadCSVModal"
+        @close="reDownloadCSVModal = false"
+        @confirm="confirmReDownloadCSV"
+        message="You already downloaded the CSV file. Download again?"
+      />
+
+      <ReDownloadConfirm
+        :show="reDownloadExcelModal"
+        @close="reDownloadExcelModal = false"
+        @confirm="confirmReDownloadExcel"
+        message="You already downloaded the Excel file. Download again?"
+      />
+
       <LogoutConfirm
         :show="showLogout"
         @close="showLogout = false"
@@ -196,6 +219,11 @@ export default {
       loading: false,
       loadingMessage: "Please wait...",
 
+      downloadCSVLock: false,
+      downloadExcelLock: false,
+
+      reDownloadCSVModal: false,
+      reDownloadExcelModal: false,
     }
   },
 
@@ -549,9 +577,21 @@ async updatePerson() {
   }
 },
 
-
     /* ---------------- EXPORT ---------------- */
-    exportCSV() {
+exportCSV() {
+  const key = "csv_downloaded";
+
+  // IF ALREADY DOWNLOADED BEFORE → Ask for confirmation
+  if (sessionStorage.getItem(key)) {
+    this.reDownloadCSVModal = true;
+    return;
+  }
+
+  // First download
+  this.performCSVExport();
+  sessionStorage.setItem(key, "true");
+},
+performCSVExport() {
   if (!this.people.length) return;
 
   let csv = "Full Name,Work ID,Region,Designation,Valid Until\n";
@@ -568,7 +608,23 @@ async updatePerson() {
   a.download = "people.csv";
   a.click();
 },
-    exportExcel() {
+exportExcel() {
+  const key = "excel_downloaded";
+
+  if (sessionStorage.getItem(key)) {
+    this.reDownloadExcelModal = true;
+    return;
+  }
+
+  this.performExcelExport();
+  sessionStorage.setItem(key, "true");
+},
+confirmReDownloadCSV() {
+  this.performCSVExport();
+  this.reDownloadCSVModal = false;
+},
+
+performExcelExport() {
   let table = `
     <table>
       <tr>
@@ -597,6 +653,11 @@ async updatePerson() {
   a.download = "people.xls";
   a.click();
 },
+confirmReDownloadExcel() {
+  this.performExcelExport();
+  this.reDownloadExcelModal = false;
+},
+
 
 
     /* ---------------- DATE FORMATTING ---------------- */

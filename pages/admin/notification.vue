@@ -6,21 +6,9 @@
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 ml-64 p-6 max-w-3xl">
-      <h1 class="text-3xl font-bold mb-6">Export Tools</h1>
+      <h1 class="text-3xl font-bold mb-6">Notifications</h1>
 
-      <p class="mb-6 text-gray-600">
-        Export all people data using the buttons below.
-      </p>
-
-      <div class="flex gap-4">
-        <button class="px-4 py-2 bg-green-600 text-white rounded" @click="exportCSV">
-          Export CSV
-        </button>
-
-        <button class="px-4 py-2 bg-yellow-500 text-white rounded" @click="exportExcel">
-          Export Excel
-        </button>
-      </div>
+    
     </main>
 
     <!-- LOGOUT MODAL -->
@@ -80,54 +68,6 @@ export default {
       this.people = data || [];
     },
 
-    /* ---------------- EXPORT CSV ---------------- */
-    exportCSV() {
-      if (!this.people.length) return;
-
-      let csv = "Full Name,Work ID,Region,Designation,Expiry\n";
-
-      this.people.forEach(p => {
-        csv += `${p.last_name}, ${p.first_name} ${p.middle_initial},${p.work_id},${p.region},${p.designation},${p.expiry_date}\n`;
-      });
-
-      const blob = new Blob([csv], { type: "text/csv" });
-      const link = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = link;
-      a.download = "people.csv";
-      a.click();
-    },
-
-    /* ---------------- EXPORT EXCEL ---------------- */
-    exportExcel() {
-      let table = `
-      <table>
-        <tr>
-          <th>Name</th><th>Work ID</th><th>Region</th><th>Designation</th><th>Expiry</th>
-        </tr>
-        ${this.people
-          .map(
-            p => `
-        <tr>
-          <td>${p.first_name} ${p.middle_initial}. ${p.last_name}</td>
-          <td>${p.work_id}</td>
-          <td>${p.region}</td>
-          <td>${p.designation}</td>
-          <td>${p.expiry_date}</td>
-        </tr>`
-          )
-          .join("")}
-      </table>`;
-
-      const blob = new Blob([table], { type: "application/vnd.ms-excel" });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "people.xls";
-      a.click();
-    },
 
     /* ---------------- CONFIRM LOGOUT ---------------- */
     async confirmLogout() {
