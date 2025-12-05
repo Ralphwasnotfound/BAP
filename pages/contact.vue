@@ -6,7 +6,14 @@
   </div>
 </template>
 
-<script setup>
-import Navbar from '~/components/Navbar.vue'
-import Contact from '~/components/Contact.vue'
+<script >
+import Contact from '~/components/Contact.vue';
+import Navbar from '~/components/Navbar.vue';
+
+export default {
+  components : {
+    Navbar,
+    Contact
+  }
+}
 </script>

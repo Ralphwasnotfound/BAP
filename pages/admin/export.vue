@@ -1,29 +1,51 @@
 <template>
-  <div class="p-6 max-w-3xl mx-auto">
-    <h1 class="text-3xl font-bold mb-6">Export Tools</h1>
+  <div class="flex min-h-screen">
 
-    <p class="mb-6 text-gray-600">
-      Export all people data using the buttons below.
-    </p>
+    <!-- 🔵 SIDEBAR -->
+    <AdminSideBar @logout="showLogout = true" />
 
-    <div class="flex gap-4">
-      <button class="px-4 py-2 bg-green-600 text-white rounded" @click="exportCSV">
-        Export CSV
-      </button>
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 ml-64 p-6 max-w-3xl">
+      <h1 class="text-3xl font-bold mb-6">Export Tools</h1>
 
-      <button class="px-4 py-2 bg-yellow-500 text-white rounded" @click="exportExcel">
-        Export Excel
-      </button>
-    </div>
+      <p class="mb-6 text-gray-600">
+        Export all people data using the buttons below.
+      </p>
+
+      <div class="flex gap-4">
+        <button class="px-4 py-2 bg-green-600 text-white rounded" @click="exportCSV">
+          Export CSV
+        </button>
+
+        <button class="px-4 py-2 bg-yellow-500 text-white rounded" @click="exportExcel">
+          Export Excel
+        </button>
+      </div>
+    </main>
+
+    <!-- LOGOUT MODAL -->
+    <LogoutConfirm
+      :show="showLogout"
+      @close="showLogout = false"
+      @confirm="confirmLogout"
+    />
+
   </div>
 </template>
 
 <script>
+import AdminSideBar from "~/components/Admin/AdminSideBar.vue";
+import LogoutConfirm from "~/components/LogoutConfirm.vue";
+
 export default {
-  layout: "admin",
+  components: {
+    AdminSideBar,
+    LogoutConfirm
+  },
 
   data() {
     return {
+      showLogout: false,
       people: []
     };
   },
@@ -34,6 +56,7 @@ export default {
   },
 
   methods: {
+    /* ---------------- SECURITY CHECK ---------------- */
     async checkAdmin() {
       const { $supabase } = useNuxtApp();
       const { data } = await $supabase.auth.getSession();
@@ -47,6 +70,7 @@ export default {
       }
     },
 
+    /* ---------------- LOAD ALL PEOPLE ---------------- */
     async loadPeople() {
       const { data } = await this.$supabase
         .from("people")
@@ -56,9 +80,7 @@ export default {
       this.people = data || [];
     },
 
-    /* --------------------------
-       EXPORT CSV
-    ---------------------------*/
+    /* ---------------- EXPORT CSV ---------------- */
     exportCSV() {
       if (!this.people.length) return;
 
@@ -77,9 +99,7 @@ export default {
       a.click();
     },
 
-    /* --------------------------
-       EXPORT EXCEL
-    ---------------------------*/
+    /* ---------------- EXPORT EXCEL ---------------- */
     exportExcel() {
       let table = `
       <table>
@@ -107,14 +127,20 @@ export default {
       a.href = url;
       a.download = "people.xls";
       a.click();
+    },
+
+    /* ---------------- CONFIRM LOGOUT ---------------- */
+    async confirmLogout() {
+      this.showLogout = false;
+
+      const { $supabase } = useNuxtApp();
+      await $supabase.auth.signOut();
+
+      localStorage.removeItem("admin_verified");
+      sessionStorage.removeItem("temporary_trust");
+
+      this.$router.push("/login");
     }
   }
 };
-</script>
-
-
-<script setup>
-    definePageMeta({
-        layout: "admin"
-    });
 </script>

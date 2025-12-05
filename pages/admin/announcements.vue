@@ -1,95 +1,111 @@
 <template>
-  <div class="p-6 max-w-5xl mx-auto">
+  <div class="flex min-h-screen">
 
-    <h1 class="text-3xl font-bold mb-6">Announcements</h1>
+    <!-- 🔵 SIDEBAR (always visible) -->
+    <AdminSideBar @logout="showLogout = true" />
 
-    <!-- ACTION BUTTON -->
-    <button
-      class="px-4 py-2 bg-purple-600 text-white rounded mb-4"
-      @click="openAddAnnouncement"
-    >
-      + Add Announcement
-    </button>
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 ml-64 p-6 max-w-5xl">
+      <h1 class="text-3xl font-bold mb-6">Announcements</h1>
 
-    <!-- TABLE -->
-    <table class="w-full border text-left mb-6">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="p-2 border">Image</th>
-          <th class="p-2 border">Title</th>
-          <th class="p-2 border">Content</th>
-          <th class="p-2 border">Actions</th>
-        </tr>
-      </thead>
+      <!-- ACTION BUTTON -->
+      <button
+        class="px-4 py-2 bg-purple-600 text-white rounded mb-4"
+        @click="openAddAnnouncement"
+      >
+        + Add Announcement
+      </button>
 
-      <tbody>
-        <tr v-for="a in announcements" :key="a.id">
-          <td class="p-2 border text-center">
-            <img
-              v-if="a.image_url"
-              :src="a.image_url"
-              class="w-12 h-12 object-cover rounded mx-auto"
-            />
-            <span v-else>No Image</span>
-          </td>
+      <!-- TABLE -->
+      <table class="w-full border text-left mb-6">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="p-2 border">Image</th>
+            <th class="p-2 border">Title</th>
+            <th class="p-2 border">Content</th>
+            <th class="p-2 border">Actions</th>
+          </tr>
+        </thead>
 
-          <td class="p-2 border">{{ a.title }}</td>
-          <td class="p-2 border">{{ a.content }}</td>
+        <tbody>
+          <tr v-for="a in announcements" :key="a.id">
+            <td class="p-2 border text-center">
+              <img
+                v-if="a.image_url"
+                :src="a.image_url"
+                class="w-12 h-12 object-cover rounded mx-auto"
+              />
+              <span v-else>No Image</span>
+            </td>
 
-          <td class="p-2 border text-center">
-            <button
-              class="px-2 py-1 bg-yellow-500 text-white rounded"
-              @click="openEditAnnouncement(a)"
-            >
-              Edit
-            </button>
-            <button
-              class="px-2 py-1 bg-red-600 text-white rounded"
-              @click="openDeleteAnnouncement(a)"
-            >
-              Delete
-            </button>
-          </td>
-        </tr>
+            <td class="p-2 border">{{ a.title }}</td>
+            <td class="p-2 border">{{ a.content }}</td>
 
-        <tr v-if="announcements.length === 0">
-          <td colspan="4" class="text-center p-4">No announcements yet.</td>
-        </tr>
-      </tbody>
-    </table>
+            <td class="p-2 border text-center">
+              <button
+                class="px-2 py-1 bg-yellow-500 text-white rounded"
+                @click="openEditAnnouncement(a)"
+              >
+                Edit
+              </button>
+              <button
+                class="px-2 py-1 bg-red-600 text-white rounded"
+                @click="openDeleteAnnouncement(a)"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
 
-    <!-- MODALS -->
-    <AnnouncementModal
-      :show="showAnnouncementModal"
-      :isEditing="isEditingAnnouncement"
-      :form="announcementForm"
-      @close="closeAnnouncementModal"
-      @submit="handleAnnouncementSubmit"
-    />
+          <tr v-if="announcements.length === 0">
+            <td colspan="4" class="text-center p-4">No announcements yet.</td>
+          </tr>
+        </tbody>
+      </table>
 
-    <DeleteAnnouncementModal
-      :show="showDeleteAnnouncementModal"
-      :announcement="selectedAnnouncement"
-      @close="showDeleteAnnouncementModal = false"
-      @confirm="deleteAnnouncement"
-    />
+      <!-- MODALS -->
+      <AnnouncementModal
+        :show="showAnnouncementModal"
+        :isEditing="isEditingAnnouncement"
+        :form="announcementForm"
+        @close="closeAnnouncementModal"
+        @submit="handleAnnouncementSubmit"
+      />
+
+      <DeleteAnnouncementModal
+        :show="showDeleteAnnouncementModal"
+        :announcement="selectedAnnouncement"
+        @close="showDeleteAnnouncementModal = false"
+        @confirm="deleteAnnouncement"
+      />
+
+      <LogoutConfirm
+        :show="showLogout"
+        @close="showLogout = false"
+        @confirm="confirmLogout"
+      />
+    </main>
+
   </div>
 </template>
 
 <script>
+import AdminSideBar from "~/components/Admin/AdminSideBar.vue";
 import AnnouncementModal from "~/components/Announcement/AnnouncementModal.vue";
 import DeleteAnnouncementModal from "~/components/Announcement/DeleteAnnouncementModal.vue";
+import LogoutConfirm from "~/components/LogoutConfirm.vue";
 
 export default {
-  layout: "admin",
-
   components: {
+    AdminSideBar,
     AnnouncementModal,
-    DeleteAnnouncementModal
+    DeleteAnnouncementModal,
+    LogoutConfirm
   },
 
   data() {
     return {
+      showLogout: false,
       announcements: [],
 
       showAnnouncementModal: false,
@@ -99,7 +115,7 @@ export default {
       selectedAnnouncement: null,
 
       announcementForm: { title: "", content: "", image_url: "" },
-      announcementPhotoFile: null
+      announcementPhotoFile: null,
     };
   },
 
@@ -109,6 +125,7 @@ export default {
   },
 
   methods: {
+    /* ------------------ SECURITY ------------------ */
     async checkAdmin() {
       const { $supabase } = useNuxtApp();
       const { data } = await $supabase.auth.getSession();
@@ -122,6 +139,7 @@ export default {
       }
     },
 
+    /* ------------------ LOAD ------------------ */
     async loadAnnouncements() {
       const { data } = await this.$supabase
         .from("announcements")
@@ -131,9 +149,7 @@ export default {
       this.announcements = data || [];
     },
 
-    /* ---------------------------
-       ADD / EDIT / DELETE
-    ----------------------------*/
+    /* ------------------ MODALS ------------------ */
     openAddAnnouncement() {
       this.isEditingAnnouncement = false;
       this.announcementForm = { title: "", content: "", image_url: "" };
@@ -166,6 +182,7 @@ export default {
       else this.addAnnouncement();
     },
 
+    /* ------------------ IMAGE UPLOAD ------------------ */
     async uploadAnnouncementImage() {
       if (!this.announcementPhotoFile) return this.announcementForm.image_url;
 
@@ -188,11 +205,12 @@ export default {
       return data.publicUrl;
     },
 
+    /* ------------------ CRUD ------------------ */
     async addAnnouncement() {
       const image_url = await this.uploadAnnouncementImage();
 
       await this.$supabase.from("announcements").insert([
-        { ...this.announcementForm, image_url }
+        { ...this.announcementForm, image_url },
       ]);
 
       this.closeAnnouncementModal();
@@ -212,20 +230,24 @@ export default {
     },
 
     async deleteAnnouncement() {
-      await this.$supabase.from("announcements")
+      await this.$supabase
+        .from("announcements")
         .delete()
         .eq("id", this.selectedAnnouncement.id);
 
       this.showDeleteAnnouncementModal = false;
       this.loadAnnouncements();
-    }
-  }
+    },
+    confirmLogout() {
+      this.showLogout = false;
+      const { $supabase } = useNuxtApp()
+      $supabase.auth.signOut()
+
+      localStorage.removeItem("admin_verified");
+      sessionStorage.removeItem("temporary_trust");
+
+      this.$router.push("/login");
+    },
+  },
 };
-</script>
-
-
-<script setup>
-    definePageMeta({
-        layout: "admin"
-    });
 </script>
