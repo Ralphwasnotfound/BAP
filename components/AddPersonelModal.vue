@@ -219,10 +219,17 @@ export default {
     },
 
     handlePhoto(e) {
-      const file = e.target.files[0];
-      this.photoFile = file;
-      if (file) this.previewPhoto = URL.createObjectURL(file);
-    },
+  const file = e.target.files[0];
+  this.photoFile = file;
+
+  if (file) {
+    this.previewPhoto = URL.createObjectURL(file);
+
+    // ⭐ FIX: update form picture_url so parent receives correct value
+    this.localForm.picture_url = this.previewPhoto;
+  }
+},
+
 
     submitForm() {
       this.errors = this.validateForm();

@@ -142,6 +142,7 @@
       </div>
     </main>
   </div>
+  <LoadingModal :show="loading" :message="loadingMessage" />
 </template>
 
 <script>
@@ -152,6 +153,7 @@ import PeopleForm from '~/components/PeopleForm.vue'
 import NotificationModal from '~/components/NotificationModal.vue'
 import ReDownloadConfirm from '~/components/ReDownloadConfirm.vue'
 import LogoutConfirm from "~/components/LogoutConfirm.vue";
+import LoadingModal from "~/components/Loading/LoadingModal.vue"
 
 export default {
   components: {
@@ -161,7 +163,8 @@ export default {
     PeopleForm,
     NotificationModal,
     ReDownloadConfirm,
-    LogoutConfirm
+    LogoutConfirm,
+    LoadingModal
   },
 
   data() {
@@ -189,6 +192,10 @@ export default {
       downloadLock: false,
       reDownloadModal: false,
       pdfTargetPerson: null,
+
+      loading: false,
+      loadingMessage: "Please wait...",
+
     }
   },
 
@@ -199,14 +206,43 @@ export default {
   },
 
   methods: {
-    formatFullName(p) {
+formatFullName(p) {
+  if (!p) return "";
   const mi = p.middle_initial ? p.middle_initial + ". " : "";
-  const suffix = p.suffix ? " " + p.suffix + ". ": "";
-  return `${p.first_name} ${mi}${p.last_name}${suffix}`;
+  const suffix = p.suffix ? " " + p.suffix : "";
+  return `${(p.first_name || "").trim()} ${mi}${(p.last_name || "").trim()}${suffix}`.replace(/\s+/g, " ").trim();
 },
 
 
-    showNotification(title, message, type = "success") {
+checkConnection() {
+  if (!navigator.onLine) {
+    this.loading = false;
+    this.showNotification(
+      "Connection Error",
+      "No internet connection detected.",
+      "error"
+    );
+    return false;
+  }
+  return true;
+},
+timeoutPromise(promise, ms = 10000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("timeout")), ms);
+
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+},
+
+  showNotification(title, message, type = "success") {
   this.noticeTitle = title
   this.noticeMessage = message
   this.noticeType = type
@@ -240,21 +276,30 @@ export default {
       sessionStorage.setItem(key, "true")
     },
 
-    async performPDFDownload(person) {
-      this.downloadLock = true 
+  async performPDFDownload(person) {
+  if (!this.checkConnection()) return;
 
-      this.showNotification("Generating PDF", "Please wait...", "success")
+  this.loading = true;
+  this.loadingMessage = "Generating PDF...";
+  this.downloadLock = true;
 
-      try {
-        await this.$refs.PeopleForm.exportPersonPDF(person)
-        this.showNotification("PDF Ready", "Download started.", "success")
-      } catch (err) {
-        console.error(err)
-        this.showNotification("Error", "Failed to generate PDF.", "error")
-      }
-      
-      setTimeout(() => (this.downloadLock = false), 2000)
-    },
+  try {
+    // if PeopleForm.exportPersonPDF returns a promise, wrap in timeout if desired:
+    await this.timeoutPromise(this.$refs.PeopleForm.exportPersonPDF(person), 20000);
+    this.showNotification("PDF Ready", "Download started.", "success");
+  } catch (err) {
+    console.error(err);
+    if (err.message === "timeout") {
+      this.showNotification("Timeout", "PDF generation timed out.", "error");
+    } else {
+      this.showNotification("Error", "Failed to generate PDF.", "error");
+    }
+  } finally {
+    this.loading = false;
+    setTimeout(() => (this.downloadLock = false), 2000);
+  }
+},
+
 
     async confirmReDownload() {
       if (!this.pdfTargetPerson) return
@@ -264,26 +309,47 @@ export default {
 
     /* ---------------- LOAD PEOPLE ---------------- */
     async loadPeople() {
-      const from = (this.currentPage - 1) * this.pageSize
-      const to = from + this.pageSize - 1
+  if (!this.checkConnection()) return;
 
-      let query = this.$supabase
-        .from("people")
-        .select("*", { count: "exact" })
-        .order("id", { ascending: false })
-        .range(from, to)
+  this.loading = true;
+  this.loadingMessage = "Loading people...";
 
-      if (this.searchQuery.trim()) {
-        const s = this.searchQuery.trim()
-        query = query.or(
-          `first_name.ilike.%${s}%,middle_initial.ilike.%${s}%,last_name.ilike.%${s}%,suffix.ilike.%${s}%,work_id.ilike.%${s}%,region.ilike.%${s}%,designation.ilike.%${s}%,chapter.ilike.%${s}%`
-        )
-      }
+  try {
+    const from = (this.currentPage - 1) * this.pageSize;
+    const to = from + this.pageSize - 1;
 
-      const { data, count } = await query
-      this.people = data || []
-      this.totalPages = Math.ceil(count / this.pageSize)
-    },
+    let query = this.$supabase
+      .from("people")
+      .select("*", { count: "exact" })
+      .order("id", { ascending: false })
+      .range(from, to);
+
+    if (this.searchQuery.trim()) {
+      const s = this.searchQuery.trim();
+      query = query.or(
+        `first_name.ilike.%${s}%,middle_initial.ilike.%${s}%,last_name.ilike.%${s}%,suffix.ilike.%${s}%,work_id.ilike.%${s}%,region.ilike.%${s}%,designation.ilike.%${s}%,chapter.ilike.%${s}%`
+      );
+    }
+
+    // ⏳ Apply timeout protection (10 seconds)
+    const { data, count } = await this.timeoutPromise(query, 10000);
+
+    this.people = data || [];
+    this.totalPages = Math.ceil(count / this.pageSize);
+
+  } catch (err) {
+    console.error(err);
+
+    if (err.message === "timeout") {
+      this.showNotification("Timeout", "Server not responding. Try again.", "error");
+    } else {
+      this.showNotification("Error", "Failed to load people. Check your connection.", "error");
+    }
+  }
+
+  this.loading = false;
+},
+
 
     handleSearch() {
       this.currentPage = 1
@@ -356,56 +422,133 @@ export default {
     },
 
     async uploadPhoto() {
-      if (!this.photoFile) return this.form.picture_url
+  if (!this.photoFile) return this.form.picture_url || "";
 
-      const safe = this.photoFile.name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9._-]/g, "")
-      const filename = `${Date.now()}_${safe}`
+  if (!this.checkConnection()) return this.form.picture_url || "";
 
-      const { error } = await this.$supabase.storage
-        .from("people_photos")
-        .upload(filename, this.photoFile)
+  const safe = this.photoFile.name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9._-]/g, "");
+  const filename = `${Date.now()}_${safe}`;
 
-      if (error) return this.form.picture_url
+  try {
+    // timeout the upload (20s)
+    const uploadRes = await this.timeoutPromise(
+      this.$supabase.storage.from("people_photos").upload(filename, this.photoFile),
+      20000
+    );
 
-      const { data } = this.$supabase.storage.from("people_photos").getPublicUrl(filename)
-      return data.publicUrl
-    },
+    if (uploadRes.error) {
+      console.error("Upload error:", uploadRes.error);
+      this.showNotification("Upload failed", "Could not upload photo.", "error");
+      return this.form.picture_url || "";
+    }
+
+    const { data: urlData, error: urlError } = await this.timeoutPromise(
+      this.$supabase.storage.from("people_photos").getPublicUrl(filename),
+      10000
+    );
+
+    if (urlError) {
+      console.error("GetPublicUrl error:", urlError);
+      return this.form.picture_url || "";
+    }
+
+    return urlData.publicUrl || this.form.picture_url || "";
+
+  } catch (err) {
+    console.error("uploadPhoto error", err);
+    if (err.message === "timeout") {
+      this.showNotification("Timeout", "Photo upload timed out.", "error");
+    } else {
+      this.showNotification("Upload error", "Failed to upload photo.", "error");
+    }
+    return this.form.picture_url || "";
+  }
+},
+
 
     async addPerson() {
-      const picture_url = await this.uploadPhoto()
+  if (!this.checkConnection()) return;
 
-      const { full_name, ...cleanData } = this.form
+  this.loading = true;
+  this.loadingMessage = "Adding person...";
 
-      await this.$supabase.from("people").insert([{ ...cleanData, picture_url }])
+  try {
+    const picture_url = await this.uploadPhoto();
 
-      this.showNotification("Success!", "Person added successfully!", "success")
-      this.closeModal()
-      this.loadPeople()
-    },
+    const { full_name, ...cleanData } = this.form;
 
-    async updatePerson() {
-      const picture_url = await this.uploadPhoto()
+    await this.timeoutPromise(
+      this.$supabase.from("people").insert([{ ...cleanData, picture_url }]),
+      10000
+    );
 
-      const { full_name, ...cleanData } = this.form
+    this.showNotification("Success!", "Person added successfully!", "success");
+    this.closeModal();
+    await this.loadPeople();
+  } catch (err) {
+    console.error(err);
+    if (err.message === "timeout") {
+      this.showNotification("Timeout", "Failed to add person. Server not responding.", "error");
+    } else {
+      this.showNotification("Error", "Failed to add person. Check your connection.", "error");
+    }
+  } finally {
+    this.loading = false;
+  }
+},
 
-      await this.$supabase.from("people")
+
+async updatePerson() {
+  if (!this.checkConnection()) return;
+
+  this.loading = true;
+  this.loadingMessage = "Updating person...";
+
+  try {
+    const picture_url = await this.uploadPhoto();
+    const { full_name, ...cleanData } = this.form;
+
+    await this.timeoutPromise(
+      this.$supabase.from("people")
         .update({ ...cleanData, picture_url })
-        .eq("id", this.selectedPerson.id)
+        .eq("id", this.selectedPerson.id),
+      10000
+    );
 
-      this.showNotification("Updated!", "Person updated successfully!", "warning")
+    this.showNotification("Updated!", "Person updated successfully!", "warning");
+    this.closeModal();
+    await this.loadPeople();
+  } catch (err) {
+    console.error(err);
+    this.showNotification("Error", "Failed to update person.", "error");
+  } finally {
+    this.loading = false;
+  }
+},
 
-      this.closeModal()
-      this.loadPeople()
-    },
 
     async deletePerson() {
-      await this.$supabase.from("people").delete().eq("id", this.selectedPerson.id)
+  if (!this.checkConnection()) return;
 
-      this.showNotification("Deleted!", "Person has been removed.", "error")
+  this.loading = true;
+  this.loadingMessage = "Deleting person...";
+  try {
+    await this.timeoutPromise(
+      this.$supabase.from("people").delete().eq("id", this.selectedPerson.id),
+      10000
+    );
 
-      this.showDeleteModal = false
-      this.loadPeople()
-    },
+    this.showNotification("Deleted!", "Person has been removed.", "error");
+    this.showDeleteModal = false;
+    await this.loadPeople();
+  } catch (err) {
+    console.error(err);
+    this.showNotification("Error", "Failed to delete person.", "error");
+  } finally {
+    this.loading = false;
+  }
+},
+
 
     /* ---------------- EXPORT ---------------- */
     exportCSV() {
@@ -425,37 +568,36 @@ export default {
   a.download = "people.csv";
   a.click();
 },
-
-
     exportExcel() {
-      let table = `
-        <table>
-          <tr>
-            <th>Name</th><th>Work ID</th>
-            <th>Region</th><th>Designation</th><th>Valid Until</th>
-          </tr>
-          ${this.people
-            .map(
-              p => `
-            <tr>
-              <td>${this.formatFullName}</td>
-              <td>${p.work_id}</td>
-              <td>${p.region}</td>
-              <td>${p.designation}</td>
-              <td>${p.valid_until}</td>
-            </tr>`
-            )
-            .join("")}
-        </table>`
+  let table = `
+    <table>
+      <tr>
+        <th>Name</th><th>Work ID</th>
+        <th>Region</th><th>Designation</th><th>Valid Until</th>
+      </tr>
+      ${this.people
+        .map(
+          p => `
+        <tr>
+          <td>${this.formatFullName(p)}</td>
+          <td>${p.work_id}</td>
+          <td>${p.region}</td>
+          <td>${p.designation}</td>
+          <td>${this.formatMonthYear(p.valid_until)}</td>
+        </tr>`
+        )
+        .join("")}
+    </table>`;
 
-      const blob = new Blob([table], { type: "application/vnd.ms-excel" })
-      const url = URL.createObjectURL(blob)
+  const blob = new Blob([table], { type: "application/vnd.ms-excel" });
+  const url = URL.createObjectURL(blob);
 
-      const a = document.createElement("a")
-      a.href = url
-      a.download = "people.xls"
-      a.click()
-    },
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "people.xls";
+  a.click();
+},
+
 
     /* ---------------- DATE FORMATTING ---------------- */
     formatMonthYear(value) {
