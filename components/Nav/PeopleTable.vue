@@ -1,0 +1,401 @@
+<template>
+  <div class="p-2 max-w-6xl mx-auto">
+
+    <!-- HEADER -->
+    <div class="flex flex-1 items-center">
+      <img src="/img/BAP-2.png" alt="" class="w-24">
+      <h1 class="text-3xl font-bold mb-6">People Directory</h1>
+    </div>
+
+<!-- RESULT + LEGEND WRAPPER -->
+<div class="flex items-center justify-between mb-3 w-full">
+
+  <!-- LEFT SIDE (holds result bar or empty space) -->
+  <div class="flex items-center min-h-[32px] flex-1">
+    <div
+      v-if="(
+          search.trim().length > 0 || 
+          filterRegion !== '' || 
+          filterDesignation !== ''
+        ) && filteredPeople.length > 0"
+      class="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-100 border rounded-full 
+             text-sm text-gray-600"
+    >
+      <span class="font-semibold">{{ filteredPeople.length }}</span>
+      {{ filteredPeople.length === 1 ? 'Item' : 'Items' }}
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE (legend always here) -->
+  <div class="flex items-center gap-4 text-sm text-gray-700 ml-4 shrink-0">
+
+    <!-- VALID -->
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full bg-green-600"></span>
+      <span>Valid</span>
+    </div>
+
+    <!-- EXPIRING SOON -->
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full bg-yellow-600"></span>
+      <span>Expiring Soon</span>
+    </div>
+
+    <!-- EXPIRED -->
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full bg-red-600"></span>
+      <span>Expired</span>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- Search + Filters -->
+<div class="flex flex-wrap md:flex-nowrap items-center gap-3 mb-3">
+
+  <!-- SEARCH INPUT -->
+  <div class="relative flex-1">
+    <input
+      v-model="search"
+      placeholder="Search name, work ID, or chapter..."
+      class="w-full border rounded-full px-4 py-2 pl-10 text-sm
+             focus:outline-none focus:ring-2 focus:ring-blue-400"
+    />
+
+    <!-- Icon -->
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="28"
+      height="28"
+      class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+      fill="rgba(173,184,194,1)"
+    >
+      <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168Z" />
+    </svg>
+  </div>
+
+  <!-- REGION FILTER -->
+  <select
+    v-model="filterRegion"
+    class="border rounded-full px-4 py-2 text-sm w-full md:w-40
+           focus:outline-none focus:ring-2 focus:ring-blue-400"
+  >
+    <option value="">All Regions</option>
+    <option v-for="r in regions" :key="r" :value="r">{{ r }}</option>
+  </select>
+
+  <!-- DESIGNATION FILTER -->
+  <select
+    v-model="filterDesignation"
+    class="border rounded-full px-4 py-2 text-sm w-full md:w-36
+           focus:outline-none focus:ring-2 focus:ring-blue-400"
+  >
+    <option value="">Designation</option>
+    <option v-for="t in designationList" :key="t" :value="t">
+      {{ t }}
+    </option>
+  </select>
+
+</div>
+
+    <!-- People Table -->
+    <!-- CLEAN PEOPLE DIRECTORY TABLE -->
+<div class="relative overflow-x-auto bg-white shadow rounded border">
+  <table class="w-full text-sm text-left">
+    
+    <!-- HEADER -->
+    <thead class="bg-gray-100 border-b">
+      <tr>
+        <th class="p-3 border text-center w-[80px]">Photo</th>
+        <th class="p-3 border">Name</th>
+        <th class="p-3 border">Work ID</th>
+        <th class="p-3 border">Region</th>
+        <th class="p-3 border">Designation</th>
+        <th class="p-3 border">Chapter</th>
+        <th class="p-3 border">Valid Until</th>
+      </tr>
+    </thead>
+
+    <!-- BODY -->
+    <tbody>
+      <transition-group name="tableFade" as="template">
+      
+      
+      <tr
+        v-for="p in paginatedPeople"
+        :key="p.id"
+        class="hover:bg-gray-50 text-[13px] cursor-pointer"
+        @click="openPersonCard(p)"
+      >
+        <!-- PHOTO -->
+        <td class="p-2 border text-center">
+          <img
+            v-if="p.picture_url && !brokenImages[p.id]"
+            :src="p.picture_url"
+            @error="brokenImages[p.id] = true"
+            class="w-12 h-12 rounded-full object-cover mx-auto border"
+          />
+          <span v-else class="text-gray-500 text-xs">No Photo</span>
+        </td>
+
+        <!-- NAME -->
+        <td class="p-2 border font-medium text-gray-800">
+          {{ formatFullName(p) }}
+        </td>
+
+        <!-- WORK ID -->
+        <td class="p-2 border text-gray-700">{{ p.work_id }}</td>
+
+        <!-- REGION -->
+        <td class="p-2 border text-gray-700">{{ p.region }}</td>
+
+        <!-- DESIGNATION -->
+        <td class="p-2 border text-gray-700">{{ p.designation }}</td>
+
+        <!-- CHAPTER -->
+        <td class="p-2 border text-gray-700">{{ p.chapter }}</td>
+
+        <!-- VALID UNTIL (with color logic) -->
+        <td
+          class="p-2 border font-semibold"
+          :class="getValidColor(p.valid_until)"
+        >
+          {{ formatMonthYear(p.valid_until) }}
+        </td>
+      </tr>
+      </transition-group>
+
+      <!-- EMPTY STATE -->
+      <tr v-if="filteredPeople.length === 0">
+        <td colspan="7" class="p-4 text-center text-gray-500">
+          No matching records found.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+    <!-- Pagination -->
+<div class="flex justify-between items-center mt-4">
+
+  <!-- LEFT: PAGE TEXT -->
+  <span class="text-sm text-gray-500 leading-tight">
+    Page {{ currentPage }} of {{ totalPages }}
+  </span>
+
+  <!-- RIGHT: BUTTONS -->
+  <div class="flex gap-2">
+    <!-- PREV -->
+    <button
+      class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg 
+             hover:bg-gray-200 hover:border-gray-400 
+             disabled:opacity-50 disabled:hover:bg-gray-100 disabled:hover:border-gray-300 
+             transition"
+      :disabled="currentPage === 1"
+      @click="prevPage"
+    >
+      Prev
+    </button>
+
+    <!-- NEXT -->
+    <button
+      class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg 
+             hover:bg-gray-200 hover:border-gray-400
+             disabled:opacity-50 disabled:hover:bg-gray-100 disabled:hover:border-gray-300
+             transition"
+      :disabled="currentPage === totalPages"
+      @click="nextPage"
+    >
+      Next
+    </button>
+  </div>
+
+</div>
+
+
+
+    <PersonCardModal
+      :show="showCardModal"
+      :person="cardPerson"
+      @close="showCardModal = false"
+    />
+  </div>
+</template>
+
+<script>
+import PersonCardModal from "~/components/Modals/PersonCardModal.vue";
+
+export default {
+  components: {
+    PersonCardModal
+  },
+  data() {
+    return {
+      showCardModal:false,
+      cardPerson: null,
+      supabase: null,
+      brokenImages: {},
+      people: [],
+      search: "",
+      filterRegion: "",
+      filterDesignation: "",
+      regions: [],
+      designationList: [],
+      currentPage: 1,
+      pageSize: 10,
+    };
+  },
+
+  async mounted() {
+  this.supabase = useSupabaseClient();
+  await this.loadPeople();   // wait for actual data
+  this.$emit("loaded");      // tell parent that loading is finished
+},
+
+
+  computed: {
+    filteredPeople() {
+      const s = this.search.toLowerCase();
+
+      return this.people.filter((p) => {
+        const matchesSearch = [
+          this.formatFullName(p),
+          p.work_id,
+          p.chapter,
+          p.region,
+          p.designation,
+        ]
+          .filter(Boolean)
+          .some((field) => (field || "").toLowerCase().includes(s));
+
+        const matchesRegion = this.filterRegion
+          ? p.region === this.filterRegion
+          : true;
+
+        const matchesDesignation = this.filterDesignation
+          ? p.designation === this.filterDesignation
+          : true;
+
+        return matchesSearch && matchesRegion && matchesDesignation;
+      });
+    },
+
+    paginatedPeople() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      return this.filteredPeople.slice(start, start + this.pageSize);
+    },
+
+    totalPages() {
+      return Math.ceil(this.filteredPeople.length / this.pageSize) || 1;
+    },
+  },
+
+  watch: {
+    search() {
+      this.currentPage = 1;
+    },
+    filterRegion() {
+      this.currentPage = 1;
+    },
+    filterDesignation() {
+      this.currentPage = 1;
+    },
+  },
+
+  methods: {
+    formatFullName(p) {
+      const mi = p.middle_initial ? p.middle_initial + ". " : "";
+      const suffix = p.suffix ? " " + p.suffix : "";
+      return `${p.first_name} ${mi}${p.last_name}${suffix}`;
+    },
+    async loadPeople() {
+      const { data } = await this.supabase.from("people").select("*");
+
+      console.log("LOADED PEOPLE:", data);  // <-- ADD THIS
+
+      if (data) {
+        this.people = data;
+        this.regions = [...new Set(data.map((p) => p.region))].filter(Boolean);
+        this.designationList = [...new Set(data.map((p) => p.designation))].filter(Boolean);
+      }
+    },
+    nextPage() {
+      if (this.currentPage < this.totalPages) this.currentPage++;
+    },
+
+    prevPage() {
+      if (this.currentPage > 1) this.currentPage--;
+    },
+    openPersonCard(person) {
+      this.cardPerson = person
+      this.showCardModal = true
+    },
+
+    getValidColor(validUntil) {
+      if (!validUntil) return "";
+      
+      const today = new Date();
+      
+      // Extract ONLY year + month for today
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth(); // 0–11
+      
+      // Extract ONLY year + month for expiration
+      const expDate = new Date(validUntil);
+      const expYear = expDate.getFullYear();
+      const expMonth = expDate.getMonth();
+      
+      // Convert to total months for easy comparison
+      const todayTotal = currentYear * 12 + currentMonth;
+      const expTotal = expYear * 12 + expMonth;
+      
+      const diffMonths = expTotal - todayTotal;
+      
+      // EXPIRED (month-year earlier than today)
+      if (diffMonths < 0) {
+        return "text-red-600 font-bold";
+      }
+    
+      if (diffMonths === 0) {
+        return "text-red-600 font-bold";
+      }
+    
+      // ALMOST EXPIRED (within 2 months)
+      if (diffMonths <= 2) {
+        return "text-yellow-600 font-bold";
+      }
+    
+      // STILL VALID
+      return "text-green-600 font-bold";
+    },
+    formatMonthYear(date) {
+      if (!date) return "";
+      const d = new Date(date);
+      return d.toLocaleString("en-US", { month: "long", year: "numeric" });
+    },
+  },
+};
+</script>
+
+<style scoped>
+
+    /* Fade + Slide animation for table rows */
+.tableFade-enter-active,
+.tableFade-leave-active {
+  transition: all 0.35s ease;
+}
+
+.tableFade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.tableFade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+</style>
