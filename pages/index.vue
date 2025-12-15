@@ -1,16 +1,29 @@
 <template>
-  <div>
+  <div class="relative">
     <Navbar />
 
     <!-- HERO WITH OVERLAYED ANNOUNCEMENTS -->
-    <div class="relative h-screen w-full overflow-hidden">
-
+    <div class="relative min-h-[calc(100vh-64px)] w-full overflow-hidden">
       <!-- HERO BACKGROUND -->
       <HomePage />
 
-      <!-- ANNOUNCEMENTS FLOATING ON RIGHT SIDE -->
+      <!-- ANNOUNCEMENTS -->
       <div
-        class="absolute right-6 bottom-6 w-full max-w-lg px-2"
+        class="
+          absolute
+          bottom-4
+          left-1/2
+          -translate-x-1/2
+          w-full
+          max-w-md
+          px-3
+
+          md:bottom-6
+          md:left-auto
+          md:right-6
+          md:translate-x-0
+          md:max-w-lg
+        "
       >
         <AnnouncementList />
       </div>
@@ -19,6 +32,7 @@
     <LoadingModal :show="loading" :message="loadingMessage" />
   </div>
 </template>
+
 
 
 <script>

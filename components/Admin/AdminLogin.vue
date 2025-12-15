@@ -1,106 +1,173 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-700 via-blue-500 to-indigo-600 px-4">
-    <div class="backdrop-blur-xl bg-white/20 border border-white/30 shadow-2xl rounded-2xl flex flex-col md:flex-row overflow-hidden w-full max-w-4xl animate-fadeIn">
+  <div class="min-h-screen flex items-center justify-center px-3 sm:px-4">
 
-      <!-- LEFT -->
-      <div class="flex flex-col items-center justify-center p-10 md:w-1/2 bg-white/10 backdrop-blur-xl border-r border-white/20">
-        <img src="/assets/img/BAP-2.png" class="w-44 mb-5 animate-float" />
-        <h2 class="text-white text-3xl font-extrabold tracking-wide">BAP Federation</h2>
-        <p class="text-white/80 mt-2">Admin Access Portal</p>
+    <!-- CARD -->
+    <div
+      class="w-full max-w-md sm:max-w-lg md:max-w-4xl
+             bg-white/90 rounded-2xl shadow-2xl overflow-hidden
+             flex flex-col md:flex-row"
+    >
+
+      <!-- LEFT BRAND (hidden on mobile) -->
+      <div
+        class="hidden md:flex md:w-1/2
+               flex-col items-center justify-center
+               bg-blue-700 text-white
+               p-8 lg:p-10 text-center"
+      >
+        <img
+          src="/assets/img/BAP-2.png"
+          class="w-32 lg:w-40 mb-6
+                 filter drop-shadow-[0_0_30px_rgba(255,255,255,0.7)]"
+        />
+        <h2 class="text-2xl lg:text-3xl font-bold tracking-wide">
+          BAP Federation
+        </h2>
+        <p class="text-white/80 mt-2 text-sm">
+          Admin Access Portal
+        </p>
       </div>
 
-      <!-- RIGHT -->
-      <div class="p-10 md:w-1/2 w-full bg-white/90">
+      <!-- RIGHT FORM -->
+      <div
+        class="w-full md:w-1/2
+               p-6 sm:p-8 md:p-10"
+        :class="{ 'shake': errorMessage }"
+      >
 
-        <!-- STEP 1: LOGIN -->
+        <!-- LOGIN -->
         <div v-if="step === 'login'">
-          <h2 class="text-3xl font-bold text-gray-800 text-center mb-8">Admin Login</h2>
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-6">
+            Admin Login
+          </h2>
 
           <div class="mb-4">
-            <label class="text-sm font-semibold text-gray-700">Email</label>
-            <input v-model="email" type="email" placeholder="Enter admin email"
-              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              v-model="email"
+              type="email"
+              placeholder="admin@email.com"
+              :class="errorMessage ? 'border-red-500 ring-1 ring-red-400' : ''"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2
+                     focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
-          <div class="mb-6">
-            <label class="text-sm font-semibold text-gray-700">Password</label>
-            <input v-model="password" type="password" placeholder="Enter password"
-              class="w-full border rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500" />
+          <div class="mb-6 relative">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="••••••••"
+              class="w-full rounded-lg border border-gray-300 px-3 py-2 mt-1 pr-10
+                     focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <!-- TOGGLE -->
+            <button
+              type="button"
+              @click="showPassword = !showPassword"
+              class="absolute right-3 top-[36px]
+                     text-gray-500 hover:text-gray-700"
+            >
+              <!-- SVGs unchanged -->
+              <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="rgba(173,184,194,1)"><path d="M1.18164 12C2.12215 6.87976 6.60812 3 12.0003 3C17.3924 3 21.8784 6.87976 22.8189 12C21.8784 17.1202 17.3924 21 12.0003 21C6.60812 21 2.12215 17.1202 1.18164 12ZM12.0003 17C14.7617 17 17.0003 14.7614 17.0003 12C17.0003 9.23858 14.7617 7 12.0003 7C9.23884 7 7.00026 9.23858 7.00026 12C7.00026 14.7614 9.23884 17 12.0003 17ZM12.0003 15C10.3434 15 9.00026 13.6569 9.00026 12C9.00026 10.3431 10.3434 9 12.0003 9C13.6571 9 15.0003 10.3431 15.0003 12C15.0003 13.6569 13.6571 15 12.0003 15Z"></path></svg>
+
+              <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="rgba(173,184,194,1)"><path d="M4.52047 5.93457L1.39366 2.80777L2.80788 1.39355L22.6069 21.1925L21.1927 22.6068L17.8827 19.2968C16.1814 20.3755 14.1638 21.0002 12.0003 21.0002C6.60812 21.0002 2.12215 17.1204 1.18164 12.0002C1.61832 9.62282 2.81932 7.5129 4.52047 5.93457ZM14.7577 16.1718L13.2937 14.7078C12.902 14.8952 12.4634 15.0002 12.0003 15.0002C10.3434 15.0002 9.00026 13.657 9.00026 12.0002C9.00026 11.537 9.10522 11.0984 9.29263 10.7067L7.82866 9.24277C7.30514 10.0332 7.00026 10.9811 7.00026 12.0002C7.00026 14.7616 9.23884 17.0002 12.0003 17.0002C13.0193 17.0002 13.9672 16.6953 14.7577 16.1718ZM7.97446 3.76015C9.22127 3.26959 10.5793 3.00016 12.0003 3.00016C17.3924 3.00016 21.8784 6.87992 22.8189 12.0002C22.5067 13.6998 21.8038 15.2628 20.8068 16.5925L16.947 12.7327C16.9821 12.4936 17.0003 12.249 17.0003 12.0002C17.0003 9.23873 14.7617 7.00016 12.0003 7.00016C11.7514 7.00016 11.5068 7.01833 11.2677 7.05343L7.97446 3.76015Z"></path></svg>
+            </button>
           </div>
 
-          <button @click="login" :disabled="loading || lockedOut"
-            class="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition shadow-lg disabled:opacity-50">
+          <button
+            @click="login"
+            :disabled="loading || lockedOut"
+            class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold
+                   hover:bg-blue-700 transition disabled:opacity-50"
+          >
             {{ loading ? "Logging in..." : "Login" }}
           </button>
 
-          <p v-if="lockedOut" class="mt-4 text-red-600 text-center font-semibold">
+          <p v-if="lockedOut" class="mt-4 text-sm text-red-600 text-center">
             Too many attempts. Try again in {{ formattedLockout }}.
           </p>
 
-          <p v-if="errorMessage" class="mt-4 text-red-600 text-center font-semibold">
+          <p v-if="errorMessage" class="mt-4 text-sm text-red-600 text-center">
             {{ errorMessage }}
           </p>
         </div>
 
-        <!-- STEP 2: OTP -->
+        <!-- OTP -->
         <div v-else-if="step === 'otp'">
-          <h2 class="text-3xl font-bold text-gray-800 text-center mb-8">Enter OTP</h2>
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-4">
+            Verify OTP
+          </h2>
 
-          <p v-if="lockedOut" class="text-center text-red-600 font-semibold mb-4">
-            Too many attempts. Try again in {{ formattedLockout }}.
-          </p>
-
-          <p v-if="!lockedOut" class="text-center text-gray-600 mb-4">
-            A 6-digit code was sent to:<br />
+          <p class="text-center text-gray-600 text-sm mb-6">
+            Enter the 6-digit code sent to<br />
             <span class="font-semibold">{{ email }}</span>
           </p>
 
-          <div class="flex justify-center gap-3 mb-6">
-            <input v-for="(_, i) in 6" :key="i" maxlength="1" v-model="otp[i]" ref="otpBoxes"
-              @input="(e) => nextBox(i, e)" :disabled="lockedOut"
-              class="w-12 h-12 border text-center text-xl rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-200 disabled:cursor-not-allowed" />
+          <div class="flex justify-center gap-2 sm:gap-3 mb-6">
+            <input
+              v-for="(_, i) in 6"
+              :key="i"
+              maxlength="1"
+              v-model="otp[i]"
+              ref="otpBoxes"
+              @input="(e) => nextBox(i, e)"
+              :disabled="lockedOut"
+              class="w-10 h-10 sm:w-11 sm:h-11
+                     text-center text-lg rounded-lg
+                     border border-gray-300
+                     focus:ring-2 focus:ring-blue-500
+                     disabled:bg-gray-100"
+            />
           </div>
 
-          <button @click="verifyOtp" :disabled="loading || lockedOut"
-            class="w-full bg-green-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-green-700 transition disabled:opacity-50">
+          <button
+            @click="verifyOtp"
+            :disabled="loading || lockedOut"
+            class="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold
+                   hover:bg-green-700 transition disabled:opacity-50"
+          >
             {{ loading ? "Verifying..." : "Verify OTP" }}
           </button>
 
-          <!-- REMEMBER DEVICE -->
-          <label class="flex items-center justify-center gap-2 mt-3">
+          <label class="flex items-center justify-center gap-2 mt-4 text-sm text-gray-600">
             <input type="checkbox" v-model="rememberDevice" />
-            <span class="text-sm text-gray-600">Remember this device</span>
+            Remember this device
           </label>
 
-          <!-- RESEND OTP -->
-          <p class="text-center mt-4 text-gray-600">
-            Didn't receive the code?
-            <button @click="resendOtp"
+          <p class="text-center mt-4 text-sm text-gray-600">
+            Didn’t receive the code?
+            <button
+              @click="resendOtp"
               :disabled="lockedOut || resendCooldown > 0 || loading || resendCount >= maxResendCount"
-              class="text-blue-600 font-semibold disabled:text-gray-400 ml-2">
-              Resend OTP
+              class="text-blue-600 font-semibold ml-1 disabled:text-gray-400"
+            >
+              Resend
             </button>
           </p>
 
-          <p v-if="resendCount >= maxResendCount" class="text-center text-red-500 text-sm mt-2">
-            Maximum resend limit reached.
+          <p v-if="resendCooldown > 0" class="text-center text-xs text-gray-500 mt-1">
+            Resend available in {{ resendCooldown }}s
           </p>
 
-          <p v-if="resendCooldown > 0" class="text-center text-gray-500 text-sm mt-2">
-            You can resend again in {{ resendCooldown }}s
-          </p>
-
-          <p v-if="errorMessage && !lockedOut" class="mt-4 text-red-600 text-center font-semibold">
+          <p v-if="errorMessage && !lockedOut" class="mt-3 text-sm text-red-600 text-center">
             {{ errorMessage }}
           </p>
-
         </div>
-      </div>
 
+      </div>
     </div>
+
+    <LoadingModal :show="loading" :message="loadingMessage" />
   </div>
-  <LoadingModal :show="loading" :message="loadingMessage"/>
 </template>
+
 
 <script>
 import LoadingModal from '../Modals/LoadingModal.vue';
@@ -111,6 +178,9 @@ export default {
 
   data() {
     return {
+      showCard: false,
+      showPassword: false,
+      mounted: false,
       supabase: null,
       loading: false,
       loadingMessage: "",
@@ -152,6 +222,10 @@ export default {
 
   mounted() {
     // resume lockout state if present
+    requestAnimationFrame(() => {
+      this.mounted = true
+    })
+    
     this.supabase = useSupabaseClient()
     this.checkLockoutFromLocal();
     window.addEventListener("beforeunload", this.handleBeforeUnload);
@@ -431,4 +505,32 @@ export default {
   50% { transform: translateY(-8px); }
 }
 .animate-float { animation: float 3s ease-in-out infinite; }
+
+.cardFade-enter-active {
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.cardFade-enter-from {
+  opacity: 0;
+  transform: translateY(18px) scale(0.98);
+}
+
+.cardFade-enter-to {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@keyframes subtleShake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+}
+
+.shake {
+  animation: subtleShake 0.35s ease;
+}
+
 </style>

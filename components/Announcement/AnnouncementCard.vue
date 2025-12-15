@@ -1,32 +1,50 @@
 <template>
   <div
-    class="rounded-2xl backdrop-blur-xl bg-black/30 shadow-xl 
+    class="rounded-2xl backdrop-blur-xl bg-black/30 shadow-xl
            border border-white/20 flex flex-col overflow-hidden
            w-full h-full"
   >
 
-    <!-- IMAGE (smaller height to fit carousel) -->
+    <!-- IMAGE -->
     <img
       v-if="announcement.image_url"
       :src="announcement.image_url"
-      class="w-full h-52 object-cover"
+      class="w-full
+             h-40 sm:h-48 md:h-52
+             object-cover"
     />
 
     <!-- CONTENT -->
-    <div class="p-4 flex flex-col flex-grow overflow-hidden">
+    <div
+      class="p-3 sm:p-4
+             flex flex-col flex-grow
+             overflow-hidden"
+    >
 
       <!-- TITLE -->
-      <h3 class="text-lg font-bold text-white drop-shadow line-clamp-1">
+      <h3
+        class="text-base sm:text-lg
+               font-bold text-white drop-shadow
+               line-clamp-1"
+      >
         {{ announcement.title }}
       </h3>
 
       <!-- CONTENT -->
-      <p class="text-white/90 text-sm mt-2 flex-grow overflow-y-auto custom-scroll">
+      <p
+        class="text-xs sm:text-sm
+               text-white/90 mt-2
+               flex-grow overflow-y-auto
+               custom-scroll"
+      >
         {{ announcement.content }}
       </p>
 
       <!-- FOOTER -->
-      <p class="text-xs text-white/60 mt-3">
+      <p
+        class="text-[10px] sm:text-xs
+               text-white/60 mt-3"
+      >
         Posted: {{ new Date(announcement.created_at).toLocaleString() }}
       </p>
 
@@ -38,7 +56,7 @@
 <script setup>
 defineProps({
   announcement: Object
-});
+})
 </script>
 
 <style scoped>

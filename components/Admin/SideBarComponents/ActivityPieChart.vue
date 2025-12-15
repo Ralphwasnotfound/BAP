@@ -1,18 +1,37 @@
 <template>
   <div
-    class="w-full flex flex-col sm:flex-row items-center sm:items-start justify-center gap-6 sm:gap-10"
+    class="
+      w-full
+      flex flex-col
+      items-center
+      gap-6
+
+      sm:flex-row
+      sm:items-start
+      sm:justify-center
+      sm:gap-10
+    "
   >
 
-    <!-- LEGEND ON LEFT SIDE -->
-    <div class="grid grid-cols-1 gap-3 text-sm w-full sm:w-48">
-
+    <!-- LEGEND -->
+    <div
+      class="
+        w-full
+        max-w-sm
+        sm:max-w-[200px]
+        grid grid-cols-2
+        sm:grid-cols-1
+        gap-3
+        text-sm
+      "
+    >
       <div
         v-for="(item, index) in legendData"
         :key="index"
         class="flex items-center gap-2"
       >
         <span
-          class="w-4 h-4 rounded"
+          class="w-4 h-4 rounded shrink-0"
           :style="{ backgroundColor: item.color }"
         ></span>
 
@@ -25,16 +44,23 @@
           </span>
         </div>
       </div>
-
     </div>
 
-    <!-- CHART ON RIGHT SIDE -->
-    <div class="w-full max-w-xs sm:max-w-sm">
+    <!-- CHART -->
+    <div
+      class="
+        w-full
+        max-w-xs
+        sm:max-w-sm
+        flex justify-center
+      "
+    >
       <canvas ref="chartCanvas"></canvas>
     </div>
 
   </div>
 </template>
+
 
 
 <script>
@@ -145,12 +171,25 @@ export default {
 
 <style scoped>
 canvas {
+  width: 100% !important;
+  max-width: 280px;
   max-height: 260px;
 }
 
+/* Tablets */
 @media (min-width: 640px) {
   canvas {
-    max-height: 340px;
+    max-width: 320px;
+    max-height: 320px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  canvas {
+    max-width: 360px;
+    max-height: 360px;
   }
 }
 </style>
+

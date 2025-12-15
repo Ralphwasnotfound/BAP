@@ -1,18 +1,19 @@
 <template>
-  <div class="flex min-h-screen bg-gray-100">
+  <div class="flex min-h-screen bg-gray-100 py-10 md:py-0">
 
     <!-- SIDEBAR -->
     <AdminSideBar @logout="showLogout = true" />
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 p-6 ml-64">
-      <h1 class="text-3xl font-bold mb-6">BAP Federation</h1>
+    <main class="flex-1 p-4 md:p-6 md:ml-64">
+      <h1 class="text-2xl md:text-3xl font-bold mb-6">
+        BAP Federation
+      </h1>
 
-      <!-- ⭐ CENTERED PIE CHART ONLY -->
+      <!-- ⭐ CENTERED PIE CHART -->
       <div class="max-w-xl mx-auto">
         <ActivityPieChart :activities="activities" />
       </div>
-
     </main>
 
     <!-- LOGOUT MODAL -->
@@ -40,13 +41,14 @@ export default {
     LoadingModal,
     ActivityPieChart
   },
+
   data() {
     return {
       supabase: null,
       showLogout: false,
       loading: false,
       loadingMessage: "Please wait...",
-      activities: [] // ⭐ used only for pie chart
+      activities: []
     }
   },
 

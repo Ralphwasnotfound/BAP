@@ -1,11 +1,5 @@
 import { defineNuxtConfig } from 'nuxt/config'
 
-console.log(
-  'SUPABASE ENV:',
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_PUBLISHABLE_KEY
-)
-
 export default defineNuxtConfig({
 
   modules: [

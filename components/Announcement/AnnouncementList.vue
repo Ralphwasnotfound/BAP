@@ -1,38 +1,58 @@
 <template>
-  <section class="w-full -translate-y-[50px]">
-    <div 
+  <section
+    class="
+      w-full
+      px-3 sm:px-6
+      -translate-y-[30px]
+      sm:-translate-y-[50px]
+    "
+  >
+    <div
       v-if="announcements.length > 0"
-      class="relative h-[85vh] flex justify-center group"
+      class="
+        relative
+        flex justify-center group
+        h-[65vh]
+        sm:h-[80vh]
+        md:h-[85vh]
+      "
     >
-      <div class="relative w-full max-w-[480px] h-full">
+      <div
+        class="
+          relative
+          w-full
+          max-w-[360px]
+          sm:max-w-[420px]
+          md:max-w-[480px]
+          h-full
+        "
+      >
 
-<!-- UP ARROW -->
-<button
-  @click="prevSlide"
-  class="hidden md:flex absolute top-4 left-1/2 -translate-x-1/2
-         bg-white/80 shadow-lg rounded-full w-10 h-10 border border-white/40
-         items-center justify-center transition z-20
-         opacity-0 group-hover:opacity-100 duration-300"
->
-  <svg width="22" height="22" fill="currentColor" class="rotate-90">
-    <path d="M15 4l-8 7 8 7" />
-  </svg>
-</button>
+        <!-- UP ARROW (DESKTOP ONLY) -->
+        <button
+          @click="prevSlide"
+          class="hidden md:flex absolute top-4 left-1/2 -translate-x-1/2
+                 bg-white/80 shadow-lg rounded-full w-10 h-10
+                 items-center justify-center transition z-20
+                 opacity-0 group-hover:opacity-100 duration-300"
+        >
+          <svg width="22" height="22" fill="currentColor" class="rotate-90">
+            <path d="M15 4l-8 7 8 7" />
+          </svg>
+        </button>
 
-<!-- DOWN ARROW -->
-<button
-  @click="nextSlide"
-  class="hidden md:flex absolute bottom-4 left-1/2 -translate-x-1/2
-         bg-white/80 shadow-lg rounded-full w-10 h-10 border border-white/40
-         items-center justify-center transition z-20
-         opacity-0 group-hover:opacity-100 duration-300"
->
-  <svg width="22" height="22" fill="currentColor" class="-rotate-90">
-    <path d="M15 4l-8 7 8 7" />
-  </svg>
-</button>
-
-
+        <!-- DOWN ARROW (DESKTOP ONLY) -->
+        <button
+          @click="nextSlide"
+          class="hidden md:flex absolute bottom-4 left-1/2 -translate-x-1/2
+                 bg-white/80 shadow-lg rounded-full w-10 h-10
+                 items-center justify-center transition z-20
+                 opacity-0 group-hover:opacity-100 duration-300"
+        >
+          <svg width="22" height="22" fill="currentColor" class="-rotate-90">
+            <path d="M15 4l-8 7 8 7" />
+          </svg>
+        </button>
 
         <!-- SLIDER -->
         <div class="overflow-hidden h-full relative">
@@ -40,7 +60,7 @@
             <div
               v-if="currentAnnouncement"
               :key="currentAnnouncement.id"
-              class="absolute inset-0 flex justify-center items-start px-4"
+              class="absolute inset-0 flex justify-center items-start px-2 sm:px-4"
             >
               <AnnouncementCard :announcement="currentAnnouncement" />
             </div>
@@ -48,11 +68,21 @@
         </div>
 
         <!-- DOTS -->
-        <div class="absolute right-[-20px] top-1/2 -translate-y-1/2 flex flex-col gap-2 pointer-events-none">
+        <div
+          class="
+            absolute
+            right-[-14px]
+            md:right-[-20px]
+            top-1/2 -translate-y-1/2
+            flex flex-col gap-2
+            pointer-events-none
+          "
+        >
           <span
             v-for="(_, i) in announcements"
             :key="i"
-            class="w-3 h-3 rounded-full transition-all duration-300 pointer-events-auto"
+            class="w-3 h-3 rounded-full transition-all duration-300
+                   pointer-events-auto cursor-pointer"
             :class="currentIndex === i ? 'bg-white scale-125' : 'bg-white/40'"
             @click="goTo(i)"
           ></span>
@@ -62,6 +92,7 @@
     </div>
   </section>
 </template>
+
 
 <script>
 import AnnouncementCard from "./AnnouncementCard.vue";

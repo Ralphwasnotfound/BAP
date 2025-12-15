@@ -1,229 +1,200 @@
 <template>
-  <div class="p-2 max-w-6xl mx-auto">
+  <div class="p-3 max-w-6xl mx-auto">
 
     <!-- HEADER -->
-    <div class="flex flex-1 items-center">
-      <img src="/img/BAP-2.png" alt="" class="w-24">
-      <h1 class="text-3xl font-bold mb-6">People Directory</h1>
+    <div class="flex flex-row items-center sm:flex-row sm:items-center gap-3 mb-4">
+      <img src="/img/BAP-2.png" alt="" class="w-20 sm:w-24">
+      <h1 class="text-2xl sm:text-3xl font-bold">
+        People Directory
+      </h1>
     </div>
 
-<!-- RESULT + LEGEND WRAPPER -->
-<div class="flex items-center justify-between mb-3 w-full">
+    <!-- RESULT + LEGEND -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
 
-  <!-- LEFT SIDE (holds result bar or empty space) -->
-  <div class="flex items-center min-h-[32px] flex-1">
-    <div
-      v-if="(
-          search.trim().length > 0 || 
-          filterRegion !== '' || 
-          filterDesignation !== ''
-        ) && filteredPeople.length > 0"
-      class="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-100 border rounded-full 
-             text-sm text-gray-600"
-    >
-      <span class="font-semibold">{{ filteredPeople.length }}</span>
-      {{ filteredPeople.length === 1 ? 'Item' : 'Items' }}
-    </div>
-  </div>
-
-  <!-- RIGHT SIDE (legend always here) -->
-  <div class="flex items-center gap-4 text-sm text-gray-700 ml-4 shrink-0">
-
-    <!-- VALID -->
-    <div class="flex items-center gap-2">
-      <span class="w-3 h-3 rounded-full bg-green-600"></span>
-      <span>Valid</span>
-    </div>
-
-    <!-- EXPIRING SOON -->
-    <div class="flex items-center gap-2">
-      <span class="w-3 h-3 rounded-full bg-yellow-600"></span>
-      <span>Expiring Soon</span>
-    </div>
-
-    <!-- EXPIRED -->
-    <div class="flex items-center gap-2">
-      <span class="w-3 h-3 rounded-full bg-red-600"></span>
-      <span>Expired</span>
-    </div>
-
-  </div>
-
-</div>
-
-
-<!-- Search + Filters -->
-<div class="flex flex-wrap md:flex-nowrap items-center gap-3 mb-3">
-
-  <!-- SEARCH INPUT -->
-  <div class="relative flex-1">
-    <input
-      v-model="search"
-      placeholder="Search name, work ID, or chapter..."
-      class="w-full border rounded-full px-4 py-2 pl-10 text-sm
-             focus:outline-none focus:ring-2 focus:ring-blue-400"
-    />
-
-    <!-- Icon -->
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="28"
-      height="28"
-      class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-      fill="rgba(173,184,194,1)"
-    >
-      <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168Z" />
-    </svg>
-  </div>
-
-  <!-- REGION FILTER -->
-  <select
-    v-model="filterRegion"
-    class="border rounded-full px-4 py-2 text-sm w-full md:w-40
-           focus:outline-none focus:ring-2 focus:ring-blue-400"
-  >
-    <option value="">All Regions</option>
-    <option v-for="r in regions" :key="r" :value="r">{{ r }}</option>
-  </select>
-
-  <!-- DESIGNATION FILTER -->
-  <select
-    v-model="filterDesignation"
-    class="border rounded-full px-4 py-2 text-sm w-full md:w-36
-           focus:outline-none focus:ring-2 focus:ring-blue-400"
-  >
-    <option value="">Designation</option>
-    <option v-for="t in designationList" :key="t" :value="t">
-      {{ t }}
-    </option>
-  </select>
-
-</div>
-
-    <!-- People Table -->
-    <!-- CLEAN PEOPLE DIRECTORY TABLE -->
-<div class="relative overflow-x-auto bg-white shadow rounded border">
-  <table class="w-full text-sm text-left">
-    
-    <!-- HEADER -->
-    <thead class="bg-gray-100 border-b">
-      <tr>
-        <th class="p-3 border text-center w-[80px]">Photo</th>
-        <th class="p-3 border">Name</th>
-        <th class="p-3 border">Work ID</th>
-        <th class="p-3 border">Region</th>
-        <th class="p-3 border">Designation</th>
-        <th class="p-3 border">Chapter</th>
-        <th class="p-3 border">Valid Until</th>
-      </tr>
-    </thead>
-
-    <!-- BODY -->
-    <tbody>
-      <transition-group name="tableFade" as="template">
-      
-      
-      <tr
-        v-for="p in paginatedPeople"
-        :key="p.id"
-        class="hover:bg-gray-50 text-[13px] cursor-pointer"
-        @click="openPersonCard(p)"
-      >
-        <!-- PHOTO -->
-        <td class="p-2 border text-center">
-          <img
-            v-if="p.picture_url && !brokenImages[p.id]"
-            :src="p.picture_url"
-            @error="brokenImages[p.id] = true"
-            class="w-12 h-12 rounded-full object-cover mx-auto border"
-          />
-          <span v-else class="text-gray-500 text-xs">No Photo</span>
-        </td>
-
-        <!-- NAME -->
-        <td class="p-2 border font-medium text-gray-800">
-          {{ formatFullName(p) }}
-        </td>
-
-        <!-- WORK ID -->
-        <td class="p-2 border text-gray-700">{{ p.work_id }}</td>
-
-        <!-- REGION -->
-        <td class="p-2 border text-gray-700">{{ p.region }}</td>
-
-        <!-- DESIGNATION -->
-        <td class="p-2 border text-gray-700">{{ p.designation }}</td>
-
-        <!-- CHAPTER -->
-        <td class="p-2 border text-gray-700">{{ p.chapter }}</td>
-
-        <!-- VALID UNTIL (with color logic) -->
-        <td
-          class="p-2 border font-semibold"
-          :class="getValidColor(p.valid_until)"
+      <!-- RESULT -->
+      <div class="flex items-center min-h-[32px]">
+        <div
+          v-if="(
+            search.trim().length > 0 || 
+            filterRegion !== '' || 
+            filterDesignation !== ''
+          ) && filteredPeople.length > 0"
+          class="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-100 border rounded-full 
+                 text-sm text-gray-600"
         >
-          {{ formatMonthYear(p.valid_until) }}
-        </td>
-      </tr>
-      </transition-group>
+          <span class="font-semibold">{{ filteredPeople.length }}</span>
+          {{ filteredPeople.length === 1 ? 'Item' : 'Items' }}
+        </div>
+      </div>
 
-      <!-- EMPTY STATE -->
-      <tr v-if="filteredPeople.length === 0">
-        <td colspan="7" class="p-4 text-center text-gray-500">
-          No matching records found.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+      <!-- LEGEND -->
+      <div class="flex flex-wrap items-center gap-4 text-sm text-gray-700">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-green-600"></span>
+          <span>Valid</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-yellow-600"></span>
+          <span>Expiring Soon</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-red-600"></span>
+          <span>Expired</span>
+        </div>
+      </div>
 
+    </div>
 
-    <!-- Pagination -->
-<div class="flex justify-between items-center mt-4">
+    <!-- SEARCH + FILTERS -->
+    <div class="flex flex-col md:flex-row gap-3 mb-3">
 
-  <!-- LEFT: PAGE TEXT -->
-  <span class="text-sm text-gray-500 leading-tight">
-    Page {{ currentPage }} of {{ totalPages }}
-  </span>
+      <!-- SEARCH -->
+      <div class="relative flex-1">
+        <input
+          v-model="search"
+          placeholder="Search name, ID No., or chapter..."
+          class="w-full border rounded-full px-4 py-2 pl-10 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          fill="rgba(173,184,194,1)"
+        >
+          <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168Z"/>
+        </svg>
+      </div>
 
-  <!-- RIGHT: BUTTONS -->
-  <div class="flex gap-2">
-    <!-- PREV -->
-    <button
-      class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg 
-             hover:bg-gray-200 hover:border-gray-400 
-             disabled:opacity-50 disabled:hover:bg-gray-100 disabled:hover:border-gray-300 
-             transition"
-      :disabled="currentPage === 1"
-      @click="prevPage"
-    >
-      Prev
-    </button>
+      <!-- REGION -->
+      <div class="flex flex-row gap-2">
+      <select
+        v-model="filterRegion"
+        class="border rounded-full px-4 py-2 text-sm w-full md:w-44
+               focus:outline-none focus:ring-2 focus:ring-blue-400"
+      >
+        <option value="">All Regions</option>
+        <option v-for="r in regions" :key="r" :value="r">{{ r }}</option>
+      </select>
 
-    <!-- NEXT -->
-    <button
-      class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg 
-             hover:bg-gray-200 hover:border-gray-400
-             disabled:opacity-50 disabled:hover:bg-gray-100 disabled:hover:border-gray-300
-             transition"
-      :disabled="currentPage === totalPages"
-      @click="nextPage"
-    >
-      Next
-    </button>
-  </div>
+      <!-- DESIGNATION -->
+      <select
+        v-model="filterDesignation"
+        class="border rounded-full px-4 py-2 text-sm w-full md:w-40
+               focus:outline-none focus:ring-2 focus:ring-blue-400"
+      >
+        <option value="">Designation</option>
+        <option v-for="t in designationList" :key="t" :value="t">
+          {{ t }}
+        </option>
+      </select>
+      </div>
 
-</div>
+    </div>
 
+    <!-- TABLE WRAPPER -->
+    <div class="relative overflow-x-auto bg-white shadow rounded border">
 
+      <table class="min-w-[900px] w-full text-sm text-left">
+        <thead class="bg-gray-100 border-b">
+          <tr>
+            <th class="p-3 border text-center w-[80px]">Photo</th>
+            <th class="p-3 border">Name</th>
+            <th class="p-3 border">ID. No</th>
+            <th class="p-3 border">Region</th>
+            <th class="p-3 border">Designation</th>
+            <th class="p-3 border">Chapter</th>
+            <th class="p-3 border">Valid Until</th>
+          </tr>
+        </thead>
 
+        <tbody>
+          <transition-group name="tableFade" as="template">
+            <tr
+              v-for="p in paginatedPeople"
+              :key="p.id"
+              class="hover:bg-gray-50 text-[13px] cursor-pointer"
+              @click="openPersonCard(p)"
+            >
+              <td class="p-2 border text-center">
+                <img
+                  v-if="p.picture_url && !brokenImages[p.id]"
+                  :src="p.picture_url"
+                  @error="brokenImages[p.id] = true"
+                  class="w-12 h-12 rounded-full object-cover mx-auto border"
+                />
+                <span v-else class="text-gray-500 text-xs">No Photo</span>
+              </td>
+
+              <td class="p-2 border font-medium text-gray-800">
+                {{ formatFullName(p) }}
+              </td>
+
+              <td class="p-2 border text-gray-700">{{ p.work_id }}</td>
+              <td class="p-2 border text-gray-700">{{ p.region }}</td>
+              <td class="p-2 border text-gray-700">{{ p.designation }}</td>
+              <td class="p-2 border text-gray-700">{{ p.chapter }}</td>
+
+              <td
+                class="p-2 border font-semibold"
+                :class="getValidColor(p.valid_until)"
+              >
+                {{ formatMonthYear(p.valid_until) }}
+              </td>
+            </tr>
+          </transition-group>
+
+          <tr v-if="filteredPeople.length === 0">
+            <td colspan="7" class="p-4 text-center text-gray-500">
+              No matching records found.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mt-4">
+
+      <span class="text-sm text-gray-500">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+
+      <div class="flex gap-2">
+        <button
+          class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg
+                 hover:bg-gray-200 disabled:opacity-50 transition"
+          :disabled="currentPage === 1"
+          @click="prevPage"
+        >
+          Prev
+        </button>
+
+        <button
+          class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg
+                 hover:bg-gray-200 disabled:opacity-50 transition"
+          :disabled="currentPage === totalPages"
+          @click="nextPage"
+        >
+          Next
+        </button>
+      </div>
+
+    </div>
+
+    <!-- PERSON MODAL -->
     <PersonCardModal
       :show="showCardModal"
       :person="cardPerson"
       @close="showCardModal = false"
     />
+
   </div>
 </template>
+
 
 <script>
 import PersonCardModal from "~/components/Modals/PersonCardModal.vue";

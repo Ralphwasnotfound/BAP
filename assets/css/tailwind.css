@@ -6,3 +6,12 @@
     overflow: hidden;
     height: 100vh;
 }
+
+.pageFade-enter-active {
+    transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.pageFade-enter-from {
+    opacity: 0;
+    transform: translateY(12px);
+}

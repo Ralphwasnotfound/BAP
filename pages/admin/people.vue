@@ -1,78 +1,108 @@
 <template>
-  <div class="flex min-h-screen">
+  <div class="flex min-h-screen py-10 md:py-0">
 
     <!-- SIDEBAR -->
     <AdminSideBar @logout="showLogout = true" />
 
     <!-- MAIN -->
-    <main class="flex-1 ml-64 p-6 max-w-5xl">
-      <h1 class="text-3xl font-bold mb-6">People Directory</h1>
+    <main class="flex-1 p-4 sm:p-6 max-w-full md:ml-64">
+      <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">People Directory</h1>
 
       <!-- ACTIONS -->
 <div class="flex flex-wrap gap-3 mb-4">
 
   <!-- Add Person -->
   <button
-    class="btn-primary"
+    class="btn-primary w-full sm:w-auto"
     @click="openAddModal"
   >
     + Add Person
   </button>
 
-  <!-- Export CSV -->
+  
+  <!-- EXPORT / IMPORT GROUP -->
+<div class="bg-gray-400 md:bg-transparent rounded p-2 text-white w-full sm:w-auto">
+
+  <!-- MOBILE TOGGLE BUTTON -->
   <button
-    class="btn-green flex items-center gap-2"
-    @click="exportCSV"
-    :class="{ 'btn-disabled': downloadCSVLock }"
-    :disabled="downloadCSVLock"
+    class="sm:hidden w-full btn-gray flex items-center justify-between"
+    @click="showExportMenu = !showExportMenu"
   >
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="rgba(255,255,255,1)"><path d="M22 4C22 3.44772 21.5523 3 21 3H3C2.44772 3 2 3.44772 2 4V20C2 20.5523 2.44772 21 3 21H21C21.5523 21 22 20.5523 22 20V4ZM4 15H7.41604C8.1876 16.7659 9.94968 18 12 18C14.0503 18 15.8124 16.7659 16.584 15H20V19H4V15ZM4 5H20V13H15C15 14.6569 13.6569 16 12 16C10.3431 16 9 14.6569 9 13H4V5ZM16 11H13V14H11V11H8L12 6.5L16 11Z"></path></svg>
-    Export CSV
+    <span>Exports & Import</span>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      fill="currentColor"
+      :class="{ 'rotate-180': showExportMenu }"
+      class="transition-transform"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 15l-6-6h12z"/>
+    </svg>
   </button>
 
-  <!-- Export Excel -->
-  <button
-    class="btn-yellow flex items-center gap-2"
-    @click="exportExcel"
-    :class="{ 'btn-disabled': downloadExcelLock }"
-    :disabled="downloadExcelLock"
+  <!-- BUTTONS -->
+  <div
+    class="
+      mt-2
+      space-y-2
+      sm:mt-0
+      sm:space-y-0
+      sm:flex
+      sm:gap-3
+    "
+    :class="{
+      'hidden': !showExportMenu,
+      'block': showExportMenu,
+      'sm:block': true
+    }"
   >
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="rgba(255,255,255,1)"><path d="M22 4C22 3.44772 21.5523 3 21 3H3C2.44772 3 2 3.44772 2 4V20C2 20.5523 2.44772 21 3 21H21C21.5523 21 22 20.5523 22 20V4ZM4 15H7.41604C8.1876 16.7659 9.94968 18 12 18C14.0503 18 15.8124 16.7659 16.584 15H20V19H4V15ZM4 5H20V13H15C15 14.6569 13.6569 16 12 16C10.3431 16 9 14.6569 9 13H4V5ZM16 11H13V14H11V11H8L12 6.5L16 11Z"></path></svg>
-    Export Excel
-  </button>
 
-  <!-- Import CSV -->
-  <button
-    class="btn-purple flex items-center gap-2"
-    @click="showImportModal = true"
-  >
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="rgba(255,255,255,1)"><path d="M22 4C22 3.44772 21.5523 3 21 3H3C2.44772 3 2 3.44772 2 4V20C2 20.5523 2.44772 21 3 21H21C21.5523 21 22 20.5523 22 20V4ZM4 15H7.41604C8.1876 16.7659 9.94968 18 12 18C14.0503 18 15.8124 16.7659 16.584 15H20V19H4V15ZM4 5H20V13H15C15 14.6569 13.6569 16 12 16C10.3431 16 9 14.6569 9 13H4V5ZM16 9H13V6H11V9H8L12 13.5L16 9Z"></path></svg>
-    Import CSV
-  </button>
+    <!-- Export CSV -->
+    <button
+      class="btn-green flex items-center gap-2 w-full sm:w-auto"
+      @click="exportCSV"
+      :class="{ 'btn-disabled': downloadCSVLock }"
+      :disabled="downloadCSVLock"
+    >
+      <!-- icon -->
+      Export CSV
+    </button>
 
-  <!-- Bulk Delete -->
-  <button
-    v-if="bulkMode && selectedRows.length > 0"
-    class="btn-red flex items-center gap-2"
-    :disabled="selectedRows.length === 0"
-    @click="openBulkDeleteModal"
-  >
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path></svg>
-    Delete Selected ({{ selectedRows.length }})
-  </button>
+    <!-- Export Excel -->
+    <button
+      class="btn-yellow flex items-center gap-2 w-full sm:w-auto"
+      @click="exportExcel"
+      :class="{ 'btn-disabled': downloadExcelLock }"
+      :disabled="downloadExcelLock"
+    >
+      Export Excel
+    </button>
+
+    <!-- Import CSV -->
+    <button
+      class="btn-purple flex items-center gap-2 w-full sm:w-auto"
+      @click="showImportModal = true"
+    >
+      Import CSV
+    </button>
+
+  </div>
+</div>
 
 </div>
 
 
       <!-- SEARCH -->
-      <div class="flex justify-between items-center">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div class="relative mb-4">
           <input
             v-model="searchQuery"
             @input="handleSearch"
             type="text"
             placeholder="Search people..."
-            class="border px-4 py-2 rounded-full w-64 pr-10"  
+            class="border px-4 py-2 rounded-full w-full md:w-64 pr-10"  
           />
 
           <!-- ICON INSIDE INPUT -->
@@ -96,6 +126,18 @@
           {{ people.length === 1 ? 'Item' : 'Items' }}
       </div>
 
+      <!-- Bulk Delete -->
+      <div class="flex flex-row gap-2 items-center ">
+      <button
+        v-if="bulkMode && selectedRows.length > 0"
+        class="btn-red flex items-center gap-2 w-full sm:w-auto"
+        :disabled="selectedRows.length === 0"
+        @click="openBulkDeleteModal"
+      >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path></svg>
+        Delete Selected ({{ selectedRows.length }})
+      </button>
+
       <button 
         v-if="bulkMode"
         class="px-4 py-2 bg-gray-500 text-white flex items-center gap-2 rounded"
@@ -104,13 +146,15 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="rgba(255,255,255,1)"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM12 10.5858L14.8284 7.75736L16.2426 9.17157L13.4142 12L16.2426 14.8284L14.8284 16.2426L12 13.4142L9.17157 16.2426L7.75736 14.8284L10.5858 12L7.75736 9.17157L9.17157 7.75736L12 10.5858Z"></path></svg>
         Cancel
       </button>
+      </div>
+      
     </div>
 
       <!-- TABLE -->
       <div class="relative overflow-x-auto bg-white shadow rounded-lg border">
         <table class="w-full text-sm text-left">
           <thead class="bg-gray-100 border-b">
-            <tr>
+            <tr class="text-[11px] sm:text-xs md:text-sm">
               <!-- BULK DELETE / SELECT ALL COLUMN -->
               <th 
                 class="p-2 border text-center w-[50px]"
@@ -191,7 +235,7 @@
               <td v-else class="p-2 border text-center w-[50px]"></td>
             
               <!-- PHOTO -->
-              <td class="p-1">
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">
                 <template v-if="p.picture_url && !hasImageError[p.id]">
                   <img 
                     :src="p.picture_url"
@@ -210,15 +254,15 @@
                 {{ formatTableName(p) }}
               </td>
             
-              <td class="p-1 border">{{ p.work_id }}</td>
-              <td class="p-1 border">{{ p.region }}</td>
-              <td class="p-1 border">{{ p.designation }}</td>
-              <td class="p-1 border">{{ p.chapter }}</td>
-              <td class="p-1 border">{{ formatMonthYear(p.valid_until) }}</td>
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">{{ p.work_id }}</td>
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">{{ p.region }}</td>
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">{{ p.designation }}</td>
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">{{ p.chapter }}</td>
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">{{ formatMonthYear(p.valid_until) }}</td>
             
               <!-- ACTION BUTTONS -->
-              <td class="p-1 border text-center">
-                <div class="flex items-center justify-between">
+              <td class="p-1 border text-center max-w-[120px] sm:max-w-[150px] truncate">
+                <div class="flex items-center justify-center gap-2">
                 
                   <!-- EDIT -->
                   <button 
@@ -272,7 +316,7 @@
       </div>
 
       <!-- PAGINATION -->
-      <div class="flex justify-between items-center mt-6">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mt-6">
 
   <!-- Left: Page Text -->
   <span class="text-sm text-gray-500 leading-tight">
@@ -429,6 +473,7 @@ export default {
   data() {
     return {
       //just for design
+      showExportMenu: false,
       searchDebounce: null,
 
       showCardModal: false,

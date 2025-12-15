@@ -254,4 +254,19 @@ export default {
   color: white;
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 }
+
+@media (max-width: 480px) {
+  .card-wrapper {
+    transform: scale(0.85);
+    transform-origin: center;
+  }
+}
+
+/* Small phones */
+@media (max-width: 360px) {
+  .card-wrapper {
+    transform: scale(0.78);
+  }
+}
+
 </style>

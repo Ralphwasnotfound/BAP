@@ -1,72 +1,103 @@
 <template>
-  <div class="flex min-h-screen">
+  <div class="flex min-h-screen bg-gray-100 md:py-0 py-10">
 
     <!-- 🔵 SIDEBAR -->
     <AdminSideBar @logout="showLogout = true" />
 
     <!-- MAIN -->
-    <main class="flex-1 ml-64 p-6 max-w-5xl">
-      <h1 class="text-3xl font-bold mb-6">Announcements</h1>
-
-      
-
-      <!-- SEARCH BAR -->
-<!-- TOP BAR (Search + Add Btn) -->
-<div class="flex items-center justify-between mb-6">
-
-  <!-- SEARCH BAR -->
-  <div class="relative w-80">
-    <input
-      v-model="searchQuery"
-      type="text"
-      placeholder="Search announcements..."
-      class="border px-4 py-2 rounded-full w-full pl-10 text-sm"
-      @input="currentPage = 1"
-    />
-
-    <!-- ICON -->
-    <svg 
-      xmlns="http://www.w3.org/2000/svg"
-      width="20" height="20"
-      class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-      fill="currentColor"
+    <main
+      class="
+        flex-1
+        p-4 sm:p-6
+        md:ml-64
+        max-w-5xl
+        w-full
+      "
     >
-      <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 
-        19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 
-        2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168ZM16.0247 
-        15.8748C17.2475 14.6146 18 12.8956 18 11C18 7.1325 14.8675 4 11 4C7.1325 
-        4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18C12.8956 18 14.6146 17.2475 
-        15.8748 16.0247L16.0247 15.8748Z"/>
-    </svg>
-  </div>
+      <!-- TITLE -->
+      <h1 class="text-2xl sm:text-3xl font-bold mb-6">
+        Announcements
+      </h1>
 
-  <!-- ADD ANNOUNCEMENT BUTTON -->
-  <button
-    class="px-4 py-2 bg-purple-600 text-white rounded"
-    @click="openAddAnnouncement"
-  >
-    + Add Announcement
-  </button>
+      <!-- TOP BAR -->
+      <div
+        class="
+          flex flex-col sm:flex-row
+          sm:items-center sm:justify-between
+          gap-3
+          mb-6
+        "
+      >
+        <!-- SEARCH -->
+        <div class="relative w-full sm:w-80">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search announcements..."
+            class="
+              border px-4 py-2 rounded-full
+              w-full pl-10 text-sm
+              focus:outline-none focus:ring-2 focus:ring-blue-400
+            "
+            @input="currentPage = 1"
+          />
 
-</div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            fill="currentColor"
+          >
+            <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 
+              19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 
+              2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168Z"/>
+          </svg>
+        </div>
 
+        <!-- ADD BUTTON -->
+        <button
+          class="
+            w-full sm:w-auto
+            px-4 py-2
+            bg-[#0f3975] text-white
+            rounded-lg
+            hover:bg-blue-700
+            transition
+          "
+          @click="openAddAnnouncement"
+        >
+          + Add Announcement
+        </button>
+      </div>
 
-
-      <!-- FACEBOOK-STYLE FEED WITH ANIMATION -->
+      <!-- FEED -->
       <transition-group
         name="fade"
         tag="div"
-        class="space-y-4 max-2-2xl mx-auto"
+        class="space-y-4"
       >
         <div
           v-for="a in paginatedAnnouncements"
           :key="a.id"
-          class="bg-white rounded-lg shadow border p-2 hover:shadow-md transition"
+          class="
+            bg-white rounded-lg shadow
+            border p-3 sm:p-4
+            hover:shadow-md transition
+          "
         >
-
           <!-- HEADER -->
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="text-lg font-semibold text-gray-800">{{ a.title }}</h2>
+          <div
+            class="
+              flex flex-col sm:flex-row
+              sm:items-center sm:justify-between
+              gap-1 mb-3
+            "
+          >
+            <h2 class="text-base sm:text-lg font-semibold text-gray-800">
+              {{ a.title }}
+            </h2>
+
             <span class="text-xs text-gray-400">
               {{ new Date(a.created_at).toLocaleDateString() }}
             </span>
@@ -76,62 +107,88 @@
           <div v-if="a.image_url" class="w-full mb-3">
             <img
               :src="a.image_url"
-              class="w-full h-auto rounded-lg object-cover"
+              class="w-full max-h-[420px] object-cover rounded-lg"
             />
           </div>
 
           <!-- CONTENT -->
-          <p class="text-gray-700 whitespace-pre-line leading-relaxed mb-3 break-words">
+          <p
+            class="
+              text-gray-700 text-sm sm:text-base
+              whitespace-pre-line
+              leading-relaxed
+              break-words
+              mb-3
+            "
+          >
             {{ a.content }}
           </p>
 
           <!-- ACTIONS -->
-          <div class="flex gap-4 text-sm font-medium text-gray-600">
-            
-            <!-- EDIT -->
+          <div
+            class="
+              flex flex-wrap gap-4
+              text-sm font-medium text-gray-600
+            "
+          >
             <button
               class="flex items-center gap-1 hover:text-yellow-600"
               @click="openEditAnnouncement(a)"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor">
-                <path d="M12.9 6.85L17.14 11.1L7.24 21H3v-4.25L12.9 6.85zm1.41-1.41L16.44 3.32c.39-.39 1.03-.39 1.42 0l2.83 2.83c.39.39.39 1.02 0 1.41L18.56 9.68L14.31 5.44z"/>
-              </svg>
-              Edit
+              <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              width="24" 
+              height="24"
+              class="fill-current transition group-hover:text-yellow-600" 
+              fill="rgba(173,184,194,1)"><path d="M12.8995 6.85453L17.1421 11.0972L7.24264 20.9967H3V16.754L12.8995 6.85453ZM14.3137 5.44032L16.435 3.319C16.8256 2.92848 17.4587 2.92848 17.8492 3.319L20.6777 6.14743C21.0682 6.53795 21.0682 7.17112 20.6777 7.56164L18.5563 9.68296L14.3137 5.44032Z"></path></svg> Edit
             </button>
 
-            <!-- DELETE -->
             <button
               class="flex items-center gap-1 hover:text-red-600"
               @click="openDeleteAnnouncement(a)"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor">
-                <path d="M17 4h5v2h-2v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6H2V4h5V2h10v2zM9 9v8h2V9H9zm4 0v8h2V9h-2z"/>
-              </svg>
-              Delete
+              <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              width="24" 
+              height="24"
+              class="fill-current transition group-hover:text-red-600"
+              fill="rgba(173,184,194,1)"><path d="M17 4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7V2H17V4ZM9 9V17H11V9H9ZM13 9V17H15V9H13Z"></path></svg> Delete
             </button>
-
           </div>
-
         </div>
       </transition-group>
 
       <!-- EMPTY STATE -->
-      <div v-if="paginatedAnnouncements.length === 0"
-           class="text-center py-10 text-gray-500">
+      <div
+        v-if="paginatedAnnouncements.length === 0"
+        class="text-center py-12 text-gray-500"
+      >
         No announcements found.
       </div>
 
       <!-- PAGINATION -->
-      <div class="flex justify-between items-center mt-6">
+      <div
+        class="
+          flex flex-col sm:flex-row
+          sm:items-center sm:justify-between
+          gap-3
+          mt-6
+        "
+      >
         <span class="text-sm text-gray-600">
           Page {{ currentPage }} of {{ totalPages }}
         </span>
 
         <div class="flex gap-2">
           <button
-            class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg
-                   hover:bg-gray-200 hover:border-gray-400
-                   disabled:opacity-50 transition"
+            class="
+              px-4 py-2 rounded-lg
+              bg-gray-100 border
+              hover:bg-gray-200
+              disabled:opacity-50
+            "
             :disabled="currentPage === 1"
             @click="currentPage--"
           >
@@ -139,9 +196,12 @@
           </button>
 
           <button
-            class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg
-                   hover:bg-gray-200 hover:border-gray-400
-                   disabled:opacity-50 transition"
+            class="
+              px-4 py-2 rounded-lg
+              bg-gray-100 border
+              hover:bg-gray-200
+              disabled:opacity-50
+            "
             :disabled="currentPage === totalPages"
             @click="currentPage++"
           >
@@ -150,7 +210,7 @@
         </div>
       </div>
 
-      <!-- MODALS -->
+      <!-- MODALS (UNCHANGED) -->
       <AnnouncementModal
         :show="showAnnouncementModal"
         :isEditing="isEditingAnnouncement"
@@ -175,9 +235,9 @@
 
     <!-- GLOBAL LOADING -->
     <LoadingModal :show="loading" :message="loadingMessage" />
-
   </div>
 </template>
+
 
 
 <script>

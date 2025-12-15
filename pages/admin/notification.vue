@@ -1,34 +1,34 @@
 <template>
-  <div class="flex min-h-screen">
+  <div class="flex min-h-screen py-10 md:py-0">
 
     <!-- SIDEBAR -->
     <AdminSideBar @logout="showLogout = true" />
 
     <!-- MAIN -->
-    <main class="flex-1 ml-64 p-6 max-w-5xl">
+    <main class="flex-1 p-4 sm:p-6 md:ml-64 max-w-5xl w-full">
       <h1 class="text-3xl font-bold mb-6">Notifications</h1>
 
       <!-- LEGEND + SEARCH -->
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
 
         <!-- STATUS LEGEND -->
-        <div class="flex items-center gap-6">
+        <div class="flex flex-wrap items-center gap-4">
           <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-green-600"></span>
             <span class="text-sm text-gray-700">Valid</span>
           </div>
-        
+
           <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
             <span class="text-sm text-gray-700">Expiring Soon</span>
           </div>
-        
+
           <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-red-600"></span>
             <span class="text-sm text-gray-700">Expired</span>
           </div>
-        
-          <!-- ⭐ TOTAL RESULTS BOX -->
+
+          <!-- TOTAL RESULTS -->
           <div
             v-if="notifSearch.trim() && filteredNotifications.length > 0"
             class="px-3 py-1 bg-gray-100 border rounded-full text-sm text-gray-500"
@@ -37,131 +37,106 @@
             {{ filteredNotifications.length === 1 ? 'Item' : 'Items' }}
           </div>
         </div>
-      
-        <!-- SEARCH BAR -->
-         <div class="relative">
-        <input
-          v-model="notifSearch"
-          type="text"
-          placeholder="Search by name or work ID"
-          class="border px-3 py-2 rounded-full w-64"
-        />
 
-        <svg 
+        <!-- SEARCH -->
+        <div class="relative w-full md:w-64">
+          <input
+            v-model="notifSearch"
+            type="text"
+            placeholder="Search by name or work ID"
+            class="border px-3 py-2 rounded-full w-full pr-10"
+          />
+          <svg
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24" 
-            width="18" 
+            viewBox="0 0 24 24"
+            width="18"
             height="18"
             class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
             fill="rgba(173,184,194,1)"
           >
-            <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168ZM16.0247 15.8748C17.2475 14.6146 18 12.8956 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18C12.8956 18 14.6146 17.2475 15.8748 16.0247L16.0247 15.8748Z"/>
+            <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168Z"/>
           </svg>
-          </div>
+        </div>
       </div>
 
       <!-- TABLE -->
-      <!-- CLEAN NOTIFICATION TABLE -->
-<div class="relative overflow-x-auto bg-white shadow rounded border">
-  <table class="w-full text-sm text-left">
-    
-    <!-- HEADER -->
-    <thead class="bg-gray-100 border-b">
-      <tr>
-        <th class="p-3 border">Name</th>
-        <th class="p-3 border">Work ID</th>
-        <th class="p-3 border">Message</th>
-        <th class="p-3 border w-[160px]">Date</th>
-      </tr>
-    </thead>
+      <div class="relative overflow-x-auto bg-white shadow rounded border">
+        <table class="w-full text-sm text-left min-w-[700px]">
+          <thead class="bg-gray-100 border-b">
+            <tr>
+              <th class="p-3 border">Name</th>
+              <th class="p-3 border">Work ID</th>
+              <th class="p-3 border">Message</th>
+              <th class="p-3 border w-[160px]">Date</th>
+            </tr>
+          </thead>
 
-    <!-- BODY -->
-    <tbody>
-      <transition-group name="tableFade" as="template" >
-        
-      
-      <tr
-        v-for="log in paginatedNotifications"
-        :key="log.id"
-        class="border text-[13px]"
-        :class="getRowColor(log.person_id)"
-      >
-        <!-- NAME -->
-        <td class="p-2 border font-medium text-gray-900">
-          {{ getPersonName(log.person_id) }}
-        </td>
+          <tbody>
+            <transition-group name="tableFade" as="template">
+              <tr
+                v-for="log in paginatedNotifications"
+                :key="log.id"
+                class="border text-[13px]"
+                :class="getRowColor(log.person_id)"
+              >
+                <td class="p-2 border font-medium text-gray-900">
+                  {{ getPersonName(log.person_id) }}
+                </td>
 
-        <!-- WORK ID -->
-        <td class="p-2 border text-gray-700">
-          {{ getPersonWorkID(log.person_id) }}
-        </td>
+                <td class="p-2 border text-gray-700">
+                  {{ getPersonWorkID(log.person_id) }}
+                </td>
 
-        <!-- MESSAGE -->
-        <td class="p-2 border text-gray-700 max-w-[350px]">
-          <div class="line-clamp-2">{{ log.message }}</div>
-        </td>
+                <td class="p-2 border text-gray-700 max-w-[350px]">
+                  <div class="line-clamp-2">{{ log.message }}</div>
+                </td>
 
-        <!-- DATE -->
-        <td class="p-2 border text-gray-600 whitespace-nowrap">
-          {{
-            new Date(log.created_at).toLocaleDateString("en-US", {
-              month: "long",
-              year: "numeric",
-            })
-          }}
-        </td>
-      </tr>
-      </transition-group>
+                <td class="p-2 border text-gray-600 whitespace-nowrap">
+                  {{
+                    new Date(log.created_at).toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })
+                  }}
+                </td>
+              </tr>
+            </transition-group>
 
-      <!-- EMPTY STATE -->
-      <tr v-if="filteredNotifications.length === 0">
-        <td colspan="4" class="p-4 text-center text-gray-500">
-          No notifications found.
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
+            <tr v-if="filteredNotifications.length === 0">
+              <td colspan="4" class="p-4 text-center text-gray-500">
+                No notifications found.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <!-- PAGINATION -->
-      <div class="flex justify-between items-center mt-6">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+        <span class="text-sm text-gray-500">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
 
-  <!-- Page text -->
-  <span class="text-sm text-gray-500 leading-tight">
-    Page {{ currentPage }} of {{ totalPages }}
-  </span>
+        <div class="flex gap-2">
+          <button
+            class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg
+                   hover:bg-gray-200 disabled:opacity-50 transition"
+            :disabled="currentPage === 1"
+            @click="goPrevPage"
+          >
+            Prev
+          </button>
 
-  <!-- Buttons -->
-  <div class="flex gap-2">
-
-    <!-- Prev -->
-    <button
-      class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg
-             hover:bg-gray-200 hover:border-gray-400
-             disabled:opacity-50 disabled:hover:bg-gray-100 disabled:hover:border-gray-300
-             transition"
-      :disabled="currentPage === 1"
-      @click="goPrevPage"
-    >
-      Prev
-    </button>
-
-    <!-- Next -->
-    <button
-      class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg
-             hover:bg-gray-200 hover:border-gray-400
-             disabled:opacity-50 disabled:hover:bg-gray-100 disabled:hover:border-gray-300
-             transition"
-      :disabled="currentPage === totalPages"
-      @click="goNextPage"
-    >
-      Next
-    </button>
-
-  </div>
-
-</div>
+          <button
+            class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg
+                   hover:bg-gray-200 disabled:opacity-50 transition"
+            :disabled="currentPage === totalPages"
+            @click="goNextPage"
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
     </main>
 
@@ -171,10 +146,10 @@
       @confirm="confirmLogout"
     />
 
-    <!-- GLOBAL LOADING -->
     <LoadingModal :show="loading" :message="loadingMessage" />
   </div>
 </template>
+
 
 <script>
 import AdminSideBar from "~/components/Admin/AdminSideBar.vue";

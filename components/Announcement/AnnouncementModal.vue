@@ -20,7 +20,7 @@
           <label class="block text-gray-700 font-medium mb-1">Title</label>
           <input
             v-model="localForm.title"
-            class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+            class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
 
@@ -29,7 +29,7 @@
           <label class="block text-gray-700 font-medium mb-1">Content</label>
           <textarea
             v-model="localForm.content"
-            class="w-full border border-gray-300 px-3 py-2 rounded-lg h-28 resize-none focus:ring-2 focus:ring-purple-500 outline-none"
+            class="w-full border border-gray-300 px-3 py-2 rounded-lg h-28 resize-none focus:ring-2 focus:ring-blue-500 outline-none"
           ></textarea>
         </div>
 
@@ -58,7 +58,7 @@
           <!-- CUSTOM UPLOAD BUTTON -->
           <button
             @click="triggerFileInput"
-            class="mt-3 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition w-full text-center text-sm"
+            class="mt-3 px-4 py-2 bg-[#0f3975] text-white rounded-lg hover:bg-blue-700 transition w-full text-center text-sm"
           >
             Choose Image
           </button>
@@ -83,7 +83,7 @@
         </button>
 
         <button
-          class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+          class="px-4 py-2 bg-[#0f3975] text-white rounded-lg hover:bg-blue-700 transition"
           @click="submitForm"
         >
           {{ isEditing ? "Update" : "Add" }}
