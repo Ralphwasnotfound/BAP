@@ -1,189 +1,279 @@
+
 <template>
   <div
     v-if="show"
-    class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
   >
-    <div class="bg-white p-6 rounded shadow-lg w-[900px] max-h-[90vh] overflow-auto">
-      <h2 class="text-2xl font-bold mb-4">Bulk Import People</h2>
+    <div
+      class="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden"
+    >
+      <!-- HEADER -->
+      <div class="px-6 py-4 border-b bg-gray-50 flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-gray-800">
+          Bulk Import People
+        </h2>
+        <button
+          @click="closeModal"
+          class="text-gray-400 hover:text-gray-600 transition"
+        >
+          ✕
+        </button>
+      </div>
 
-      <!-- STEP 1: CSV + PHOTO FOLDER -->
-      <div v-if="step === 1" class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
+      <!-- BODY -->
+      <div class="p-6 space-y-6 max-h-[85vh] overflow-auto">
 
-          <!-- CSV -->
-          <div>
-            <label class="block mb-2 font-medium">Upload CSV</label>
-            <input type="file" accept=".csv" @change="handleCSVUpload" />
-            <p class="text-sm text-gray-600 mt-1">CSV must include a header row.</p>
+        <!-- STEP 1 -->
+        <div v-if="step === 1" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- CSV -->
+            <div class="bg-gray-50 rounded-xl p-4 border">
+              <label class="block text-sm font-medium mb-2 text-gray-700">
+                Upload CSV
+              </label>
+              <input
+                type="file"
+                accept=".csv"
+                @change="handleCSVUpload"
+                class="block w-full text-sm"
+              />
+              <p class="text-xs text-gray-500 mt-2">
+                CSV must include a header row.
+              </p>
+            </div>
+
+            <!-- PHOTOS -->
+            <div class="bg-gray-50 rounded-xl p-4 border">
+              <label class="block text-sm font-medium mb-2 text-gray-700">
+                Photo Folder (Optional)
+              </label>
+              <input
+                type="file"
+                webkitdirectory
+                directory
+                @change="handlePhotoFolder"
+                class="block w-full text-sm"
+              />
+              <p class="text-xs text-gray-500 mt-2">
+                Folder containing image files.
+              </p>
+
+              <div
+                v-if="photoCount"
+                class="mt-3 text-sm text-blue-700 font-medium"
+              >
+                📸 {{ photoCount }} photos detected
+              </div>
+            </div>
           </div>
 
-          <!-- PHOTO FOLDER -->
-          <div>
-            <label class="block mb-2 font-medium">Choose Photo Folder (Optional)</label>
-            <input type="file" webkitdirectory directory @change="handlePhotoFolder" />
-            <p class="text-sm text-gray-600 mt-1">
-              Select the folder containing the photos.
-            </p>
-            <div v-if="photoCount" class="mt-2 text-sm text-gray-700">
-              Photos detected: <strong>{{ photoCount }}</strong>
+          <!-- CSV PREVIEW -->
+          <div v-if="csvPreview.length">
+            <h3 class="text-sm font-semibold text-gray-700 mb-2">
+              CSV Preview (first 5 rows)
+            </h3>
+            <div class="rounded-xl border overflow-auto">
+              <table class="w-full text-xs">
+                <thead class="bg-gray-100 sticky top-0">
+                  <tr>
+                    <th
+                      v-for="h in headers"
+                      :key="h"
+                      class="px-3 py-2 text-left border-b"
+                    >
+                      {{ h }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(r, i) in csvPreview"
+                    :key="i"
+                    class="hover:bg-gray-50"
+                  >
+                    <td
+                      v-for="h in headers"
+                      :key="h"
+                      class="px-3 py-2 border-b"
+                    >
+                      {{ r[h] }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+          </div>
+
+          <!-- FOOTER -->
+          <div class="flex justify-end gap-3 pt-4 border-t">
+            <button
+              class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+              @click="closeModal"
+            >
+              Cancel
+            </button>
+
+            <button
+              class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
+              :disabled="headers.length === 0"
+              @click="step = 2"
+            >
+              Next →
+            </button>
           </div>
         </div>
 
-        <!-- CSV Preview -->
-        <div v-if="csvPreview.length" class="mt-4">
-          <h3 class="font-semibold mb-2">CSV Preview (first 5 rows)</h3>
-          <div class="max-h-40 overflow-auto border rounded">
+        <!-- STEP 2 -->
+        <div v-if="step === 2" class="space-y-5">
+          <h3 class="text-lg font-semibold text-gray-800">
+            Column Mapping
+          </h3>
+
+          <div
+            v-if="unmappedColumns.length"
+            class="rounded-lg bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-800"
+          >
+            ⚠ Ignored columns:
+            <strong>{{ unmappedColumns.join(", ") }}</strong>
+          </div>
+
+          <div class="rounded-xl border overflow-auto max-h-72">
             <table class="w-full text-sm">
-              <thead class="bg-gray-100">
+              <thead class="bg-gray-100 sticky top-0">
                 <tr>
-                  <th v-for="h in headers" :key="h" class="p-1 border">{{ h }}</th>
+                  <th class="p-3 border-b text-left">CSV Column</th>
+                  <th class="p-3 border-b text-left">Map To</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(r, i) in csvPreview" :key="i">
-                  <td v-for="h in headers" :key="h" class="p-1 border">{{ r[h] }}</td>
+                <tr
+                  v-for="col in headers"
+                  :key="col"
+                  class="hover:bg-gray-50"
+                >
+                  <td class="p-3 border-b">{{ col }}</td>
+                  <td class="p-3 border-b">
+                    <select
+                      v-model="columnMapping[col]"
+                      class="w-full border rounded-lg px-2 py-1 text-sm"
+                    >
+                      <option value="">Ignore</option>
+                      <option
+                        v-for="f in allowedFields"
+                        :key="f"
+                        :value="f"
+                      >
+                        {{ f }}
+                      </option>
+                    </select>
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </div>
 
-        <!-- CONTROLS -->
-        <div class="flex justify-end gap-3 mt-4">
-          <button class="px-3 py-2 bg-gray-500 text-white rounded" @click="closeModal">
-            Cancel
-          </button>
-
-          <button
-            class="px-3 py-2 bg-blue-600 text-white rounded"
-            :disabled="headers.length === 0"
-            @click="step = 2"
-          >
-            Next → Column Mapping
-          </button>
-        </div>
-      </div>
-
-      <!-- STEP 2: COLUMN MAPPING -->
-      <div v-if="step === 2" class="space-y-4">
-        <h3 class="text-xl font-semibold">Column Mapping</h3>
-
-        <div
-          v-if="unmappedColumns.length"
-          class="p-2 bg-yellow-100 text-yellow-900 rounded text-sm"
-        >
-          ⚠ Ignored columns: <strong>{{ unmappedColumns.join(', ') }}</strong>
-        </div>
-
-        <div class="max-h-64 overflow-auto border rounded">
-          <table class="w-full text-sm">
-            <thead class="bg-gray-200">
-              <tr>
-                <th class="p-2 border">CSV Column</th>
-                <th class="p-2 border">Map To</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="col in headers" :key="col">
-                <td class="p-2 border">{{ col }}</td>
-                <td class="p-2 border">
-                  <select v-model="columnMapping[col]" class="border p-1 rounded w-full">
-                    <option value="">Ignore</option>
-                    <option
-                      v-for="f in allowedFields"
-                      :key="f"
-                      :value="f"
-                    >
-                      {{ f }}
-                    </option>
-                  </select>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <input type="checkbox" id="autosplit" v-model="autoSplitName" />
-          <label for="autosplit" class="text-sm">
-            Auto-split FULL NAME → first/middle/last/suffix
+          <label class="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" v-model="autoSplitName" />
+            Auto-split FULL NAME into parts
           </label>
+
+          <div class="flex justify-between pt-4 border-t">
+            <button
+              class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition"
+              @click="step = 1"
+            >
+              ← Back
+            </button>
+
+            <button
+              class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+              @click="goToSimulation"
+            >
+              Next →
+            </button>
+          </div>
         </div>
 
-        <div class="flex justify-between mt-4">
-          <button class="px-3 py-2 bg-gray-500 text-white rounded" @click="step = 1">
-            ← Back
-          </button>
+        <!-- STEP 3 -->
+        <div v-if="step === 3" class="space-y-5">
+          <h3 class="text-lg font-semibold text-gray-800">
+            Simulation Preview
+          </h3>
 
-          <button class="px-3 py-2 bg-blue-600 text-white rounded" @click="goToSimulation">
-            Next → Validate & Simulate
-          </button>
-        </div>
-      </div>
-
-      <!-- STEP 3: SIMULATION -->
-      <div v-if="step === 3" class="space-y-4">
-        <h3 class="text-xl font-semibold">Simulation Preview</h3>
-
-        <!-- ERRORS -->
-        <div v-if="errors.length" class="p-3 bg-red-100 text-red-700 rounded">
-          <h4 class="font-bold">⚠ Validation Errors:</h4>
-          <ul class="list-disc pl-5">
-            <li v-for="(e,i) in errors" :key="i">{{ e }}</li>
-          </ul>
-        </div>
-
-        <!-- PHOTO MATCH SUMMARY -->
-        <div
-          v-if="photoMatchSummary"
-          class="p-2 bg-blue-100 text-blue-900 rounded text-sm"
-        >
-          <p class="font-semibold">📸 Photo Matching:</p>
-          <p>✔ Found: <strong>{{ photoMatchSummary.matched }}</strong></p>
-          <p>⚠ Missing: <strong>{{ photoMatchSummary.missing }}</strong></p>
-        </div>
-
-        <!-- SIMULATION TABLE -->
-        <div class="max-h-60 overflow-auto border rounded">
-          <table class="w-full text-xs border">
-            <thead class="bg-gray-100">
-              <tr>
-                <th v-for="h in simulatedHeaders" :key="h" class="p-1 border">{{ h }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(r,i) in simulatedData.slice(0,10)" :key="i">
-                <td v-for="h in simulatedHeaders" :key="h" class="p-1 border">
-                  {{ r[h] }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <p class="text-sm text-gray-500">
-          Showing first 10 rows — total:
-          <strong>{{ simulatedData.length }}</strong>
-        </p>
-
-        <div class="flex justify-between mt-4">
-          <button class="px-3 py-2 bg-gray-500 text-white rounded" @click="step = 2">
-            ← Back
-          </button>
-
-          <button
-            class="px-3 py-2 bg-green-600 text-white rounded"
-            :disabled="errors.length"
-            @click="confirmImport"
+          <div
+            v-if="errors.length"
+            class="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700"
           >
-            Import {{ simulatedData.length }} Rows
-          </button>
+            <p class="font-semibold mb-2">⚠ Validation Errors</p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li v-for="(e,i) in errors" :key="i">{{ e }}</li>
+            </ul>
+          </div>
+
+          <div
+            v-if="photoMatchSummary"
+            class="rounded-lg bg-blue-50 border border-blue-200 p-4 text-sm text-blue-800"
+          >
+            <p class="font-semibold">📸 Photo Matching</p>
+            <p>✔ Found: {{ photoMatchSummary.matched }}</p>
+            <p>⚠ Missing: {{ photoMatchSummary.missing }}</p>
+          </div>
+
+          <div class="rounded-xl border overflow-auto max-h-64">
+            <table class="w-full text-xs">
+              <thead class="bg-gray-100 sticky top-0">
+                <tr>
+                  <th
+                    v-for="h in simulatedHeaders"
+                    :key="h"
+                    class="p-2 border-b"
+                  >
+                    {{ h }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(r,i) in simulatedData.slice(0,10)"
+                  :key="i"
+                  class="hover:bg-gray-50"
+                >
+                  <td
+                    v-for="h in simulatedHeaders"
+                    :key="h"
+                    class="p-2 border-b"
+                  >
+                    {{ r[h] }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="flex justify-between pt-4 border-t">
+            <button
+              class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition"
+              @click="step = 2"
+            >
+              ← Back
+            </button>
+
+            <button
+              class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-50"
+              :disabled="errors.length"
+              @click="confirmImport"
+            >
+              Import {{ simulatedData.length }} Rows
+            </button>
+          </div>
         </div>
+
       </div>
     </div>
   </div>
 </template>
+
 
 <script>
 import Papa from "papaparse";
