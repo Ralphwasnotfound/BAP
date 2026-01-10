@@ -152,7 +152,7 @@
                   </li>
 
                   <li class="relative flex flex-col items-center w-24">
-                    <img src="/img/sign/gil.png" class="w-14 h-14 object-contain" />
+                    <img src="/img/sign/Gil.png" class="w-14 h-14 object-contain" />
                     <div class="absolute top-10 leading-tight">
                       <p class="text-[11px] font-semibold">Gil S. Regio</p>
                       <p class="text-[9px] font-bold">Nat'l. Commissioner</p>
