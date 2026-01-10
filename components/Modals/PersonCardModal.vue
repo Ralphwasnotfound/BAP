@@ -144,7 +144,7 @@
                   </li>
 
                   <li class="relative flex flex-col items-center w-24">
-                    <img src="/img/sign/jedel.png" class="w-14 h-14 object-contain" />
+                    <img src="/img/sign/Jedel.png" class="w-14 h-14 object-contain" />
                     <div class="absolute top-10 leading-tight">
                       <p class="text-[11px] font-semibold">Jedel Agron</p>
                       <p class="text-[9px] font-bold">Secretary General</p>
