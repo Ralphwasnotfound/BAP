@@ -41,12 +41,16 @@ export default defineEventHandler(async (event) => {
         const transporter = nodemailer.createTransport({
             host: config.smtpHost,
             port: Number(config.smtpPort),
-            secure: false, // Gmail uses STARTTLS on 587
+            secure: false,
             auth: {
                 user: config.smtpEmail,
                 pass: config.smtpPass,
             },
+            tls: {
+                rejectUnauthorized: false
+            }
         });
+
 
         await transporter.sendMail({
             from: `"BAP Federation" <${config.smtpEmail}>`,
