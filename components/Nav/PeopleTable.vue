@@ -186,12 +186,15 @@
     </div>
 
     <!-- PERSON MODAL -->
-    <PersonCardModal
-      :show="showCardModal"
-      :person="cardPerson"
-      @close="showCardModal = false"
-    />
-
+    <ClientOnly>
+      <Teleport to="body">
+        <PersonCardModal
+          :show="showCardModal"
+          :person="cardPerson"
+          @close="showCardModal = false"
+        />
+      </Teleport>
+    </ClientOnly>
   </div>
 </template>
 

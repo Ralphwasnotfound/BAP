@@ -310,7 +310,6 @@
                 No people found.
               </td>
             </tr>
-          
           </tbody>
         </table>
       </div>
@@ -424,11 +423,13 @@
         @close="showNotificationModal = false"
       />
 
-      <PersonCardModal
-        :show="showCardModal"
-        :person="cardPerson"
-        @close="showCardModal = false"
-      />
+      <Teleport to="body">
+        <PersonCardModal
+          :show="showCardModal"
+          :person="cardPerson"
+          @close="showCardModal = false"
+        />
+      </Teleport>
 
       <!-- Hidden PDF template -->
       <div style="opacity:0; pointer-events:none; position:absolute; z-index:-1;">

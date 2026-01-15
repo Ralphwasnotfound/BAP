@@ -3,8 +3,9 @@
   <transition name="fade">
     <div
       v-if="show"
-      class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[9999]"
-      @click.self="$emit('close')"   <!-- click backdrop to close -->
+      class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center"
+      style="z-index: 99999;"
+      @click.self="$emit('close')"   
     >
       <!-- Card pop -->
       <transition name="pop">
@@ -52,8 +53,10 @@
 
                 <div class="flex justify-center items-start gap-4">
                     <div class="relative flex flex-col items-center">
-                        <img :src="person.picture_url" class="w-20 h-20 rounded object-cover border bg-white"/>
-                        <img src="" alt="">
+                        <img 
+                          v-if="person?.picture_url"
+                          :src="person?.picture_url"
+                          class="w-20 h-20 rounded object-cover border bg-white"/>
                         <p class="text-outline leading-tight text-[10px] font-semibold absolute -bottom-10">Signature</p>
                     </div>
 
@@ -189,6 +192,14 @@ export default {
       return `${p.first_name} ${mi}${p.last_name}${suffix}`;
     },
   },
+      watch: {
+  show(val) {
+    if (!val) {
+      this.isFlipped = false
+      this.hideClose = false
+    }
+  }
+},
   methods: {
     toggleFlip() {
       this.hideClose = true
@@ -240,10 +251,17 @@ export default {
   width: 100%;
   height: 100%;
   position: absolute;
+
   backface-visibility: hidden;
-  transition: transform 0.6s ease;
+  -webkit-backface-visibility: hidden;
+
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+
+  transition: transform 0.6s ease;
 }
+
+
 .card-front { transform: rotateY(0deg); }
 .card-back  { transform: rotateY(180deg); }
 .card-wrapper.flipped .card-front { transform: rotateY(180deg); }
