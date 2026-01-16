@@ -434,28 +434,64 @@ export default {
     validateImport() {
       const errors = [];
       const seen = new Set();
-
+        
       this.simulatedData.forEach((row, index) => {
         const i = index + 1;
-
-        if (!row.work_id) errors.push(`Row ${i}: Missing work_id`);
-        if (!row.first_name) errors.push(`Row ${i}: Missing first_name`);
-        if (!row.last_name) errors.push(`Row ${i}: Missing last_name`);
-
+      
+        // =========================
+        // REQUIRED CORE FIELDS
+        // =========================
+        if (!row.work_id)
+          errors.push(`Row ${i}: Missing work_id`);
+      
+        if (!row.first_name)
+          errors.push(`Row ${i}: Missing first_name`);
+      
+        if (!row.last_name)
+          errors.push(`Row ${i}: Missing last_name`);
+      
+        // =========================
+        // DUPLICATE CHECK
+        // =========================
         if (row.work_id) {
           if (seen.has(row.work_id)) {
-            errors.push(`Duplicate work_id: ${row.work_id}`);
+            errors.push(`Row ${i}: Duplicate work_id (${row.work_id})`);
           }
           seen.add(row.work_id);
         }
-
+      
+        // =========================
+        // DATE VALIDATION
+        // =========================
         if (row.valid_until && isNaN(Date.parse(row.valid_until))) {
           errors.push(`Row ${i}: Invalid valid_until date`);
         }
+      
+        // =========================
+        // EMERGENCY CONTACT VALIDATION
+        // =========================
+        if (!row.emergency_name) {
+          errors.push(`Row ${i}: Missing emergency_name`);
+        }
+      
+        if (!row.emergency_cp) {
+          errors.push(`Row ${i}: Missing emergency_cp`);
+        } else {
+          // allow numbers, +, spaces, dashes
+          const phone = String(row.emergency_cp).replace(/\s+/g, "");
+          if (!/^[0-9+\-]{7,15}$/.test(phone)) {
+            errors.push(`Row ${i}: Invalid emergency_cp (${row.emergency_cp})`);
+          }
+        }
+      
+        if (!row.emergency_address) {
+          errors.push(`Row ${i}: Missing emergency_address`);
+        }
       });
-
+    
       this.errors = errors;
     },
+
 
     matchPhotos() {
       let matched = 0;

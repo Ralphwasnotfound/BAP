@@ -180,7 +180,7 @@
             
               <th class="p-2 border">Photo</th>
               <th class="p-2 border">Name</th>
-              <th class="p-2 border">Work ID</th>
+              <th class="p-2 border">ID No.</th>
               <th class="p-2 border">Region</th>
               <th class="p-2 border">Designation</th>
               <th class="p-2 border">Chapter</th>
@@ -1071,7 +1071,7 @@ export default {
       async performCSVExport() {
         if (!this.people.length) return
 
-        let csv = 'Full Name,Work ID,Region,Designation,Chapter,Valid Until\n'
+        let csv = 'Full Name,ID No.,Region,Designation,Chapter,Valid Until\n'
         this.people.forEach(p => {
           csv += `${this.formatFullName(p)},${p.work_id},${p.region},${p.designation},${p.chapter},${p.valid_until}\n`
         })
