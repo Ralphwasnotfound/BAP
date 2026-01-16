@@ -93,7 +93,7 @@
                     <div class="flex gap-14">
                       <div>
                         <p class="text-[9px] font-semibold uppercase">Region :</p>
-                        <p class="text-[12px] leading-tight font-bold ml-2">{{ person.region }}</p>
+                        <p class="text-[12px] leading-tight font-bold ml-2">{{ displayRegion }}</p>
                       </div>
 
                       <div>
@@ -210,7 +210,24 @@ export default {
       return this.person?.picture_url
         ? this.person.picture_url
         :"/img/BAP-2.png"
-    }
+    },
+      displayRegion() {
+  if (!this.person?.region) return "";
+
+  const r = this.person.region.trim();
+
+  // Special regions stay as-is
+  if (["NCR", "CAR", "BARMM"].includes(r)) {
+    return r;
+  }
+
+  // Expect format: "Region 10"
+  const match = r.match(/Region\s+(\d+)/i);
+  if (!match) return r;
+
+  const roman = this.toRoman(match[1]);
+  return roman ? `Region ${roman}` : r;
+}
   },
       watch: {
   show(val) {
@@ -237,7 +254,37 @@ export default {
         year: "numeric",
         timeZone: "UTC",
   });
+},
+toRoman(num) {
+  const map = [
+    ["XIII", 13],
+    ["XII", 12],
+    ["XI", 11],
+    ["X", 10],
+    ["IX", 9],
+    ["VIII", 8],
+    ["VII", 7],
+    ["VI", 6],
+    ["V", 5],
+    ["IV", 4],
+    ["III", 3],
+    ["II", 2],
+    ["I", 1],
+  ];
+
+  let n = Number(num);
+  if (isNaN(n) || n < 1 || n > 13) return "";
+
+  let result = "";
+  for (const [roman, value] of map) {
+    if (n === value) {
+      result = roman;
+      break;
+    }
+  }
+  return result;
 }
+
 
   },
 };

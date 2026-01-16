@@ -311,38 +311,58 @@ export default {
     },
     handleRegionInput() {
       let value = this.localForm.region.trim().toUpperCase();
-
-      // NCR
-      if (value === "NCR" || value === "NATIONAL CAPITAL REGION") {
+        
+      // SPECIAL REGIONS
+      if (["NCR", "NATIONAL CAPITAL REGION"].includes(value)) {
         this.localForm.region = "NCR";
         return;
       }
     
-      // CAR
-      if (value === "CAR" || value === "CORDILLERA" || value === "CORDILLERA ADMINISTRATIVE REGION") {
+      if ([
+        "CAR",
+        "CORDILLERA",
+        "CORDILLERA ADMINISTRATIVE REGION"
+      ].includes(value)) {
         this.localForm.region = "CAR";
         return;
       }
     
-      // ✔ Roman numeral detection (I, II, III, IV... XIII... XX...)
-      const romanRegex = /^(M|CM|D|CD|C|XC|L|XL|X|IX|V|IV|I)+$/;
+      // Roman → Number map
+      const romanMap = {
+        I: 1,
+        II: 2,
+        III: 3,
+        IV: 4,
+        V: 5,
+        VI: 6,
+        VII: 7,
+        VIII: 8,
+        IX: 9,
+        X: 10,
+        XI: 11,
+        XII: 12,
+        XIII: 13
+      };
     
-      if (romanRegex.test(value)) {
-        // keep roman numeral formatting proper
-        this.localForm.region = `Region ${value}`;
+      // Remove "REGION" if typed
+      value = value.replace(/^REGION\s*/i, "");
+    
+      // Roman numeral input
+      if (romanMap[value]) {
+        this.localForm.region = `Region ${romanMap[value]}`;
         return;
       }
     
-      // ✔ Convert numbers to Roman numeral
+      // Numeric input
       if (/^\d+$/.test(value)) {
-        const numeral = this.toRoman(value);
-        this.localForm.region = `Region ${numeral}`;
+        this.localForm.region = `Region ${parseInt(value, 10)}`;
         return;
       }
     
-      // ✔ Otherwise just capitalize normally
+      // Invalid input → keep but normalized
       this.localForm.region = this.capitalizeWords(this.localForm.region);
     },
+
 
     capitalizeWords(str) {
       if (!str) return "";

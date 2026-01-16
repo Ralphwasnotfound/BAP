@@ -174,7 +174,11 @@
           </div>
 
           <label class="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" v-model="autoSplitName" />
+            <input 
+            type="checkbox" 
+            v-model="autoSplitName" 
+            :disabled="!Object.values(columnMapping).includes('full_name')"
+            />
             Auto-split FULL NAME into parts
           </label>
 
@@ -300,9 +304,9 @@ export default {
       photoFilesMap: new Map(),
 
       allowedFields: [
+        "last_name",
         "first_name",
         "middle_initial",
-        "last_name",
         "suffix",
         "full_name",
         "work_id",
@@ -363,6 +367,7 @@ export default {
             const match = this.allowedFields.find((f) => f === lower);
             this.columnMapping[h] = match || "";
           });
+
         },
       });
     },
@@ -376,52 +381,69 @@ export default {
       });
     },
 
-    splitFullName(name) {
-      if (!name) return {};
+splitFullName(name) {
+  const parts = name.trim().split(/\s+/);
+  const suffixList = ["Jr", "Jr.", "Sr", "Sr.", "III", "IV"];
 
-      const parts = name.trim().split(/\s+/);
-      const suffixList = ["Jr", "Jr.", "Sr", "Sr.", "III", "IV"];
+  let suffix = "";
+  if (suffixList.includes(parts[parts.length - 1])) {
+    suffix = parts.pop();
+  }
 
-      let suffix = "";
-      if (suffixList.includes(parts[parts.length - 1])) {
-        suffix = parts.pop();
+  const first = parts.shift() || "";
+  const last = parts.pop() || "";
+  const mi = parts.join(" ");
+
+  return {
+    first_name: first,
+    middle_initial: mi,
+    last_name: last,
+    suffix,
+  };
+},
+
+
+buildFinalData() {
+  const out = [];
+
+  for (const row of this.parsedCSV) {
+    const obj = {};
+    let usedFullName = false;
+
+    // ONLY loop real CSV headers
+    for (const col of Object.keys(row)) {
+      const field = this.columnMapping[col];
+      if (!field) continue;
+
+      if (field === "full_name" && this.autoSplitName) {
+        Object.assign(obj, this.splitFullName(row[col]));
+        usedFullName = true;
+        continue;
       }
 
-      const first = parts.shift() || "";
-      const last = parts.pop() || "";
-      const mi = parts.join(" ");
+      if (obj.suffix && /^[A-Z]$/i.test(obj.suffix)) {
+  obj.middle_initial = obj.suffix;
+  obj.suffix = "";
+}
 
-      return {
-        first_name: first,
-        middle_initial: mi,
-        last_name: last,
-        suffix,
-      };
-    },
+      obj[field] = row[col];
+    }
 
-    buildFinalData() {
-      const out = [];
+    // ✅ ENSURE fields exist (but DO NOT overwrite)
+    if (!usedFullName) {
+      obj.middle_initial = obj.middle_initial ?? "";
+      obj.suffix = obj.suffix ?? "";
+    }
 
-      for (const row of this.parsedCSV) {
-        const obj = {};
+    // Normalize region
+    obj.region = this.normalizeRegion(obj.region);
 
-        for (const col of this.headers) {
-          const field = this.columnMapping[col];
-          if (!field) continue;
+    obj.created_at = new Date().toISOString();
+    out.push(obj);
+  }
 
-          if (field === "full_name" && this.autoSplitName) {
-            Object.assign(obj, this.splitFullName(row[col]));
-          } else {
-            obj[field] = row[col];
-          }
-        }
-
-        obj.created_at = new Date().toISOString();
-        out.push(obj);
-      }
-
-      return out;
-    },
+  return out;
+},
 
     goToSimulation() {
       this.simulatedData = this.buildFinalData();
@@ -434,7 +456,7 @@ export default {
     validateImport() {
       const errors = [];
       const seen = new Set();
-        
+
       this.simulatedData.forEach((row, index) => {
         const i = index + 1;
       
@@ -548,6 +570,53 @@ export default {
 
       this.resetAll();
     },
+normalizeRegion(value) {
+  // Default region
+  const DEFAULT = "Region 10";
+
+  if (!value) return DEFAULT;
+
+  let v = String(value).trim().toUpperCase();
+
+  // Special regions (keep as-is)
+  const special = ["NCR", "CAR", "BARMM"];
+  if (special.includes(v)) return v;
+
+  // Roman → Number
+  const romanMap = {
+    I: 1,
+    II: 2,
+    III: 3,
+    IV: 4,
+    V: 5,
+    VI: 6,
+    VII: 7,
+    VIII: 8,
+    IX: 9,
+    X: 10,
+    XI: 11,
+    XII: 12,
+    XIII: 13
+  };
+
+  // Remove "REGION" text
+  v = v.replace(/^REGION\s*/i, "");
+
+  // Roman numeral input
+  if (romanMap[v]) {
+    return `Region ${romanMap[v]}`;
+  }
+
+  // Numeric input
+  if (/^\d+$/.test(v)) {
+    return `Region ${parseInt(v, 10)}`;
+  }
+
+  // Fallback
+  return DEFAULT;
+}
+
+ 
   },
 };
 </script>

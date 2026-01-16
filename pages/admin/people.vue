@@ -203,7 +203,7 @@
               v-for="p in people" 
               :key="p.id"
               @click="openPersonCard(p)"
-              class="cursor-pointer hover:bg-gray-50 text-center text-xs font-medium"
+              class="cursor-pointer hover:bg-gray-50 text-xs font-medium"
             >
           
               <!-- BULK MODE -->
@@ -269,17 +269,17 @@
             
               <!-- NAME -->
               <td 
-                class="p-1 border whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]"
+                class="p-1 border whitespace-nowrap text-left truncate max-w-[150px]"
                 :title="formatFullName(p)"
               >
                 {{ formatTableName(p) }}
               </td>
             
-              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">{{ p.work_id }}</td>
-              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">{{ p.region }}</td>
-              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">{{ p.designation }}</td>
-              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">{{ p.chapter }}</td>
-              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">{{ formatMonthYear(p.valid_until) }}</td>
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate text-left">{{ p.work_id }}</td>
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate text-left">{{ p.region }}</td>
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate text-left">{{ p.designation }}</td>
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate text-left">{{ p.chapter }}</td>
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate text-left">{{ formatMonthYear(p.valid_until) }}</td>
             
               <!-- ACTION BUTTONS -->
               <td class="p-1 border text-center max-w-[120px] sm:max-w-[150px] truncate">

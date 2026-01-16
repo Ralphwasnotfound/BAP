@@ -119,13 +119,37 @@
               @click="openPersonCard(p)"
             >
               <td class="p-2 border text-center">
-                <img
-                  v-if="p.picture_url && !brokenImages[p.id]"
-                  :src="p.picture_url"
-                  @error="brokenImages[p.id] = true"
-                  class="w-12 h-12 rounded-full object-cover mx-auto border"
-                />
-                <span v-else class="text-gray-500 text-xs">No Photo</span>
+                <div class="relative w-10 h-10 mx-auto">
+                
+                  <!-- REAL PHOTO -->
+                  <img
+                    v-if="p.picture_url && !hasImageError[p.id]"
+                    :src="p.picture_url"
+                    class="w-10 h-10 rounded-full object-cover border"
+                    @error="hasImageError[p.id] = true"
+                  />
+                
+                  <!-- LOGO FALLBACK -->
+                  <img
+                    v-else
+                    src="/assets/img/BAP-2.png"
+                    class="w-10 h-10 rounded-full object-contain border bg-white p-1"
+                    alt="No photo"
+                  />
+                
+                  <!-- OVERLAY (PHOTO ONLY) -->
+                  <div
+                    v-if="!p.picture_url || hasImageError[p.id]"
+                    class="absolute inset-0 rounded-full
+                          flex items-center justify-center
+                        bg-black/40"
+                  >
+                    <span class="text-[5px] text-white font-semibold">
+                      NO PHOTO
+                    </span>
+                  </div>
+                
+                </div>
               </td>
 
               <td class="p-2 border font-medium text-gray-800">
