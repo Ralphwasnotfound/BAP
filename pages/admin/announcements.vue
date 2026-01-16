@@ -351,6 +351,42 @@ export default {
       if (this.isEditingAnnouncement) this.updateAnnouncement();
       else this.addAnnouncement();
     },
+    async logAnnouncement(action, description, announcementId = null, metadata = {}) {
+  try {
+    // ensure metadata is safe JSON
+    const safeMetadata = JSON.parse(JSON.stringify(metadata))
+
+    await this.logActivity(
+      action,
+      description,
+      null,
+      {
+        announcement_id: announcementId,
+        ...safeMetadata
+      }
+    )
+  } catch (err) {
+    console.warn("Announcement activity log skipped:", err)
+  }
+},
+
+async logActivity(action, description, entityId = null, metadata = {}) {
+  const { data: sessionData } = await this.supabase.auth.getSession()
+  const adminId = sessionData?.session?.user?.id || null
+
+  const { error } = await this.supabase
+    .from("activity_logs")
+    .insert([{
+      action,
+      description,
+      person_id: entityId,
+      admin_id: adminId,
+      metadata: JSON.parse(JSON.stringify(metadata)),
+      created_at: new Date().toISOString()
+    }])
+
+  if (error) console.error("Activity log failed:", error)
+},
 
     /* ======================
        IMAGE UPLOAD HANDLER
@@ -409,6 +445,16 @@ export default {
           }
         ]);
 
+        this.logAnnouncement(
+  "addAnnouncement",
+  "Added an announcement",
+  null,
+  {
+    title: this.announcementForm.title
+  }
+);
+
+
         this.closeAnnouncementModal();
         await this.loadAnnouncements();
       } finally {
@@ -420,55 +466,100 @@ export default {
        UPDATE ANNOUNCEMENT
     ====================== */
     async updateAnnouncement() {
-      try {
-        this.loading = true;
+  try {
+    this.loading = true;
 
-        const before = { ...this.selectedAnnouncement };
-        const uploaded = await this.uploadAnnouncementImage();
+    const before = { ...this.selectedAnnouncement };
+    const uploaded = await this.uploadAnnouncementImage();
 
-        if (this.announcementPhotoFile && before.image_filename) {
-          await this.deleteImageFromStorage(before.image_filename);
+    if (this.announcementPhotoFile && before.image_filename) {
+      await this.deleteImageFromStorage(before.image_filename);
+    }
+
+    const { error } = await this.supabase
+      .from("announcements")
+      .update({
+        title: this.announcementForm.title,
+        content: this.announcementForm.content,
+        image_url: uploaded.image_url,
+        image_filename: uploaded.image_filename
+      })
+      .eq("id", before.id);
+
+    // ❌ STOP if update failed
+    if (error) {
+      console.error("Update announcement failed:", error);
+      return;
+    }
+
+    // ✅ LOG ONLY AFTER SUCCESS
+    await this.logAnnouncement(
+      "updatedAnnouncement",
+      "Updated an announcement",
+      before.id,
+      {
+        before: {
+          title: before.title,
+          content: before.content
+        },
+        after: {
+          title: this.announcementForm.title,
+          content: this.announcementForm.content
         }
-
-        await this.supabase
-          .from("announcements")
-          .update({
-            title: this.announcementForm.title,
-            content: this.announcementForm.content,
-            image_url: uploaded.image_url,
-            image_filename: uploaded.image_filename
-          })
-          .eq("id", before.id);
-
-        this.closeAnnouncementModal();
-        await this.loadAnnouncements();
-      } finally {
-        this.loading = false;
       }
-    },
+    );
+
+    this.closeAnnouncementModal();
+    await this.loadAnnouncements();
+
+  } finally {
+    this.loading = false;
+  }
+},
+
 
     /* ======================
        DELETE ANNOUNCEMENT
     ====================== */
     async deleteAnnouncement() {
-      try {
-        this.loading = true;
+  try {
+    this.loading = true;
 
-        if (this.selectedAnnouncement.image_filename) {
-          await this.deleteImageFromStorage(this.selectedAnnouncement.image_filename);
-        }
+    if (this.selectedAnnouncement.image_filename) {
+      await this.deleteImageFromStorage(
+        this.selectedAnnouncement.image_filename
+      );
+    }
 
-        await this.supabase
-          .from("announcements")
-          .delete()
-          .eq("id", this.selectedAnnouncement.id);
+    const { error } = await this.supabase
+      .from("announcements")
+      .delete()
+      .eq("id", this.selectedAnnouncement.id);
 
-        this.showDeleteAnnouncementModal = false;
-        await this.loadAnnouncements();
-      } finally {
-        this.loading = false;
+    // ❌ STOP if delete failed
+    if (error) {
+      console.error("Delete announcement failed:", error);
+      return;
+    }
+
+    // ✅ LOG ONLY AFTER SUCCESS
+    await this.logAnnouncement(
+      "deletedAnnouncement",
+      "Deleted an announcement",
+      this.selectedAnnouncement.id,
+      {
+        title: this.selectedAnnouncement.title
       }
-    },
+    );
+
+    this.showDeleteAnnouncementModal = false;
+    await this.loadAnnouncements();
+
+  } finally {
+    this.loading = false;
+  }
+},
+
 
     async deleteImageFromStorage(filename) {
       try {
@@ -485,10 +576,12 @@ export default {
     /* ======================
        LOGOUT
     ====================== */
-    confirmLogout() {
+    async confirmLogout() {
       this.showLogout = false;
       this.loading = true;
       this.loadingMessage = "Logging out...";
+
+      await this.logAdminLogout();
 
       this.supabase.auth.signOut().finally(() => {
         localStorage.removeItem("admin_verified");
@@ -499,8 +592,30 @@ export default {
           this.$router.push("/login");
         }, 400);
       });
-    }
+    },
+    async logAdminLogout() {
+  try {
+    const { data } = await this.supabase.auth.getSession()
+    const user = data?.session?.user
+    if (!user) return
+
+    await this.supabase.from("activity_logs").insert([{
+      action: "adminLogout",
+      description: "Admin logged out",
+      person_id: null,        // ✅ IMPORTANT
+      admin_id: user.id,
+      metadata: {
+        email: user.email
+      },
+      created_at: new Date().toISOString()
+    }])
+  } catch (err) {
+    console.warn("Logout log skipped:", err)
+  }
+}
+
   },
+  
   computed: {
 filteredAnnouncements() {
   const q = this.searchQuery.trim().toLowerCase();

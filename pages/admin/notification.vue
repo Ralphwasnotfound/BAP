@@ -301,10 +301,10 @@ export default {
     /* ----------------- LOGOUT ----------------- */
     async confirmLogout() {
       this.showLogout = false;
-
-      // Start loading
       this.loading = true;
       this.loadingMessage = "Logging out...";
+
+      await this.logAdminLogout();
 
       try {
         await this.supabase.auth.signOut();
@@ -328,7 +328,28 @@ export default {
 
     goNextPage() {
       if (this.currentPage < this.totalPages) this.currentPage++;
-    }
+    },
+    async logAdminLogout() {
+  try {
+    const { data } = await this.supabase.auth.getSession()
+    const user = data?.session?.user
+    if (!user) return
+
+    await this.supabase.from("activity_logs").insert([{
+      action: "adminLogout",
+      description: "Admin logged out",
+      person_id: null,        // ✅ IMPORTANT
+      admin_id: user.id,
+      metadata: {
+        email: user.email
+      },
+      created_at: new Date().toISOString()
+    }])
+  } catch (err) {
+    console.warn("Logout log skipped:", err)
+  }
+}
+
 
   },
 };

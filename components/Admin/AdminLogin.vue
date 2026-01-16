@@ -307,6 +307,9 @@ export default {
         // If device already trusted -> mark verified and emit success
         if (localStorage.getItem("trusted_device") === "true") {
           localStorage.setItem("admin_verified", "true");
+
+          await this.logAdminLogin();
+
           this.$emit("loginSuccess", true);
           this.loading = false;
           return;
@@ -460,6 +463,8 @@ export default {
 
           localStorage.setItem("admin_verified", "true");
 
+          await this.logAdminLogin();
+
           // success -> emit loginSuccess
           this.$emit("loginSuccess", true);
           return;
@@ -489,6 +494,27 @@ export default {
         this.errorMessage = "Unexpected error verifying OTP.";
       }
     },
+    async logAdminLogin() {
+  try {
+    const { data } = await this.supabase.auth.getSession()
+    const user = data?.session?.user
+    if (!user) return
+
+    await this.supabase.from("activity_logs").insert([{
+      action: "adminLogin",
+      description: "Admin logged in",
+      person_id: null,        // ✅ IMPORTANT
+      admin_id: user.id,
+      metadata: {
+        email: user.email
+      },
+      created_at: new Date().toISOString()
+    }])
+  } catch (err) {
+    console.warn("Login log skipped:", err)
+  }
+}
+
   }
 };
 </script>

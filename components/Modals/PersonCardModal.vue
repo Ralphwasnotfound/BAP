@@ -51,12 +51,26 @@
                   <img src="/img/SPSG.png" class="w-24 h-24 absolute right-0 top-[-1]" />
                 </div>
 
+                <!-- ID PICTURE -->
                 <div class="flex justify-center items-start gap-4">
                     <div class="relative flex flex-col items-center">
                         <img 
-                          v-if="person?.picture_url"
-                          :src="person?.picture_url"
-                          class="w-20 h-20 rounded object-cover border bg-white"/>
+                          :src="photoSrc"
+                          class="w-20 h-20 rounded border bg-white"
+                          :class="person?.picture_url ? 'object-cover' : 'object-contain opacity-90 p-1' "
+                          />
+
+                          <div
+                            v-if="!person?.picture_url"
+                            class="absolute inset-0 bg-black/50 rounded flex items-center justify-center"
+                          >
+                            <p class="text-white text-[9px] font-bold tracking-wide">
+                              NO PHOTO
+                            </p>
+                          </div>
+
+                          <img src="" alt="">
+
                         <p class="text-outline leading-tight text-[10px] font-semibold absolute -bottom-10">Signature</p>
                     </div>
 
@@ -191,6 +205,12 @@ export default {
       const suffix = p.suffix ? " " + p.suffix : "";
       return `${p.first_name} ${mi}${p.last_name}${suffix}`;
     },
+
+    photoSrc() {
+      return this.person?.picture_url
+        ? this.person.picture_url
+        :"/img/BAP-2.png"
+    }
   },
       watch: {
   show(val) {
@@ -211,11 +231,14 @@ export default {
     },
     formatMonthYear(date) {
       if (!date) return "";
-      return new Date(date).toLocaleString("en-US", {
+      const d = new Date(date + "T00:00:00");
+      return d.toLocaleDateString("en-US", {
         month: "long",
         year: "numeric",
-      });
-    },
+        timeZone: "UTC",
+  });
+}
+
   },
 };
 </script>

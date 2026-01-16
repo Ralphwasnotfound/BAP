@@ -1,10 +1,10 @@
 <template>
   <div class="flex min-h-screen md:py-0 py-10">
 
-    <!-- 🔵 SIDEBAR -->
+    <!--SIDEBAR -->
     <AdminSideBar @logout="showLogout = true" />
 
-    <!-- 🔶 MAIN CONTENT -->
+    <!-- MAIN CONTENT -->
     <main class="flex-1 p-4 sm:p-6 md:ml-64 max-w-6xl w-full">
       <h1 class="text-2xl font-bold mb-4">Activity Logs</h1>
 
@@ -168,10 +168,6 @@
           </button>
         </div>
       </div>
-
-      <!-- DETAILS MODAL (UNCHANGED) -->
-      <!-- ✅ untouched on purpose -->
-
     </main>
 
     <!-- GLOBAL LOADING -->
@@ -207,9 +203,17 @@ export default {
       q: "",
       filterAction: "",
       actions: [
+        "adminLogin",
+        "adminLogout",
+
         "addPerson",
         "updatedPerson",
         "deletedPerson",
+
+        "addAnnouncement",
+        "updatedAnnouncement",
+        "deletedAnnouncement",
+
         "downloadPDF",
         "exportCSV",
         "exportExcel"
@@ -241,9 +245,21 @@ export default {
   methods: {
     tagClass(action) {
       return {
+        // Auth
+        adminLogin: "bg-green-600",
+        adminLogout: "bg-red-600",
+
+        // People
         addPerson: "bg-green-600",
         updatedPerson: "bg-yellow-500",
         deletedPerson: "bg-red-600",
+
+        // Announcements
+        addAnnouncement: "bg-blue-600",
+        updatedAnnouncement: "bg-orange-500",
+        deletedAnnouncement: "bg-red-700",
+
+        // Exports
         downloadPDF: "bg-indigo-600",
         exportCSV: "bg-purple-600",
         exportExcel: "bg-purple-600"
@@ -254,91 +270,87 @@ export default {
       return new Date(date).toLocaleString();
     },
 
-    /* ===========================================
-       🔵 LOAD LOGS (with loading modal support)
-       =========================================== */
-async loadLogs(showLoader = false) {
-  if (showLoader) {
-    this.loading = true;
-    this.loadingMessage = "Loading activity logs...";
-  }
+    /* LOAD LOGS (with loading modal support) */
+    async loadLogs(showLoader = false) {
+      if (showLoader) {
+        this.loading = true;
+        this.loadingMessage = "Loading activity logs...";
+      }
 
-  try {
-    let q = this.supabase
-      .from("activity_logs")
-      .select("*")
-      .order("created_at", { ascending: false });
+      try {
+        let q = this.supabase
+          .from("activity_logs")
+          .select("*")
+          .order("created_at", { ascending: false });
+      
+        // Action filter
+        if (this.filterAction) {
+          q = q.eq("action", this.filterAction);
+        }
+      
+        const { data, error } = await q;
+      
+        if (error) {
+          console.error(error);
+          this.logs = [];
+          return;
+        }
+      
+        let allLogs = data || [];
+      
+        // 🔍 FULL SEARCH (date + time + metadata + action + description)
+        if (this.q.trim()) {
+          const s = this.q.trim().toLowerCase();
+        
+          allLogs = allLogs.filter(log => {
+            const created = new Date(log.created_at);
+          
+            // DATE formats
+            const date1 = created.toLocaleDateString("en-US"); 
+            const date2 = created.toISOString().slice(0, 10);
+            const date3 = created.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+          
+            // TIME formats
+            const time1 = created.toLocaleTimeString("en-US");              // 3:15:22 PM
+            const time2 = created.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }); // 03:15 PM
+            const time3 = created.toTimeString().slice(0, 5);               // 15:15
+            const fullDateTime = `${date1} ${time1}`;                       // MM/DD/YYYY HH:mm:ss AM/PM
+          
+            return (
+              (log.action || "").toLowerCase().includes(s) ||
+              (log.description || "").toLowerCase().includes(s) ||
+              (log.person_id || "").toString().includes(s) ||
+              JSON.stringify(log.metadata || "").toLowerCase().includes(s) ||
+          
+              // Search date formats
+              date1.toLowerCase().includes(s) ||
+              date2.toLowerCase().includes(s) ||
+              date3.toLowerCase().includes(s) ||
+          
+              // Search time formats
+              time1.toLowerCase().includes(s) ||
+              time2.toLowerCase().includes(s) ||
+              time3.toLowerCase().includes(s) ||
+              fullDateTime.toLowerCase().includes(s)
+            );
+          });
+        }
+      
+        // PAGINATION
+        const start = (this.page - 1) * this.pageSize;
+        const end = start + this.pageSize;
+        this.logs = allLogs.slice(start, end);
+      
+      } catch (err) {
+        console.error("Load logs error:", err);
+      }
+    
+      if (showLoader) {
+        setTimeout(() => (this.loading = false), 300);
+      }
+    },
 
-    // Action filter
-    if (this.filterAction) {
-      q = q.eq("action", this.filterAction);
-    }
-
-    const { data, error } = await q;
-
-    if (error) {
-      console.error(error);
-      this.logs = [];
-      return;
-    }
-
-    let allLogs = data || [];
-
-    // 🔍 FULL SEARCH (date + time + metadata + action + description)
-    if (this.q.trim()) {
-      const s = this.q.trim().toLowerCase();
-
-      allLogs = allLogs.filter(log => {
-        const created = new Date(log.created_at);
-
-        // DATE formats
-        const date1 = created.toLocaleDateString("en-US"); 
-        const date2 = created.toISOString().slice(0, 10);
-        const date3 = created.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-
-        // TIME formats
-        const time1 = created.toLocaleTimeString("en-US");              // 3:15:22 PM
-        const time2 = created.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }); // 03:15 PM
-        const time3 = created.toTimeString().slice(0, 5);               // 15:15
-        const fullDateTime = `${date1} ${time1}`;                       // MM/DD/YYYY HH:mm:ss AM/PM
-
-        return (
-          (log.action || "").toLowerCase().includes(s) ||
-          (log.description || "").toLowerCase().includes(s) ||
-          (log.person_id || "").toString().includes(s) ||
-          JSON.stringify(log.metadata || "").toLowerCase().includes(s) ||
-
-          // Search date formats
-          date1.toLowerCase().includes(s) ||
-          date2.toLowerCase().includes(s) ||
-          date3.toLowerCase().includes(s) ||
-
-          // Search time formats
-          time1.toLowerCase().includes(s) ||
-          time2.toLowerCase().includes(s) ||
-          time3.toLowerCase().includes(s) ||
-          fullDateTime.toLowerCase().includes(s)
-        );
-      });
-    }
-
-    // PAGINATION
-    const start = (this.page - 1) * this.pageSize;
-    const end = start + this.pageSize;
-    this.logs = allLogs.slice(start, end);
-
-  } catch (err) {
-    console.error("Load logs error:", err);
-  }
-
-  if (showLoader) {
-    setTimeout(() => (this.loading = false), 300);
-  }
-},
-
-    /* ===========================================
-       🔶 OPEN DETAILS (show small loading effect)
-       =========================================== */
+    /*  OPEN DETAILS (show small loading effect) */
     openDetails(log) {
       this.loading = true;
       this.loadingMessage = "Loading log details...";
@@ -368,9 +380,7 @@ async loadLogs(showLoader = false) {
       }
     },
 
-    /* ===========================================
-       📤 EXPORT CSV (with loading status)
-       =========================================== */
+    /* EXPORT CSV (with loading status) */
     async exportLogsCSV() {
       this.loading = true;
       this.loadingMessage = "Exporting logs...";
@@ -417,15 +427,34 @@ async loadLogs(showLoader = false) {
         this.loading = false;
       }
     },
+    async logAdminLogout() {
+      try {
+        const { data } = await this.supabase.auth.getSession()
+        const user = data?.session?.user
+        if (!user) return
+      
+        await this.supabase.from("activity_logs").insert([{
+          action: "adminLogout",
+          description: "Admin logged out",
+          person_id: null,   
+          admin_id: user.id,
+          metadata: {
+            email: user.email
+          },
+          created_at: new Date().toISOString()
+        }])
+      } catch (err) {
+        console.warn("Logout log skipped:", err)
+      }
+    },
 
-    /* ===========================================
-       🔴 LOGOUT
-       =========================================== */
-    confirmLogout() {
+    /* LOGOUT*/
+    async confirmLogout() {
       this.showLogout = false;
-
       this.loading = true;
       this.loadingMessage = "Logging out...";
+
+      await this.logAdminLogout();
 
       this.supabase.auth.signOut().finally(() => {
         localStorage.removeItem("admin_verified");
@@ -437,7 +466,7 @@ async loadLogs(showLoader = false) {
   },
 
   /* ================================
-     🔄 WATCHERS (auto-refresh logs)
+      WATCHERS (auto-refresh logs)
      ================================ */
   watch: {
     q() {

@@ -9,89 +9,87 @@
       <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">People Directory</h1>
 
       <!-- ACTIONS -->
-<div class="flex flex-wrap gap-3 mb-4">
+      <div class="flex flex-wrap gap-3 mb-4">
+      
+        <!-- Add Person -->
+        <button
+          class="btn-primary w-full sm:w-auto"
+          @click="openAddModal"
+        >
+          + Add Person
+        </button>
 
-  <!-- Add Person -->
-  <button
-    class="btn-primary w-full sm:w-auto"
-    @click="openAddModal"
-  >
-    + Add Person
-  </button>
+        <!-- EXPORT / IMPORT GROUP -->
+        <div class="bg-gray-400 md:bg-transparent rounded p-2 text-white w-full sm:w-auto">
 
-  
-  <!-- EXPORT / IMPORT GROUP -->
-<div class="bg-gray-400 md:bg-transparent rounded p-2 text-white w-full sm:w-auto">
+        <!-- MOBILE TOGGLE BUTTON -->
+        <button
+          class="sm:hidden w-full btn-gray flex items-center justify-between"
+          @click="showExportMenu = !showExportMenu"
+        >
+          <span>Exports & Import</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            fill="currentColor"
+            :class="{ 'rotate-180': showExportMenu }"
+            class="transition-transform"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 15l-6-6h12z"/>
+          </svg>
+        </button>
 
-  <!-- MOBILE TOGGLE BUTTON -->
-  <button
-    class="sm:hidden w-full btn-gray flex items-center justify-between"
-    @click="showExportMenu = !showExportMenu"
-  >
-    <span>Exports & Import</span>
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      fill="currentColor"
-      :class="{ 'rotate-180': showExportMenu }"
-      class="transition-transform"
-      viewBox="0 0 24 24"
-    >
-      <path d="M12 15l-6-6h12z"/>
-    </svg>
-  </button>
-
-  <!-- BUTTONS -->
-  <div
-    class="
-      mt-2
-      space-y-2
-      sm:mt-0
-      sm:space-y-0
-      sm:flex
-      sm:gap-3
-    "
-    :class="{
-      'hidden': !showExportMenu,
-      'block': showExportMenu,
-      'sm:block': true
-    }"
-  >
-
-    <!-- Export CSV -->
-    <button
-      class="btn-green flex items-center gap-2 w-full sm:w-auto"
-      @click="exportCSV"
-      :class="{ 'btn-disabled': downloadCSVLock }"
-      :disabled="downloadCSVLock"
-    >
-      <!-- icon -->
-      Export CSV
-    </button>
-
-    <!-- Export Excel -->
-    <button
-      class="btn-yellow flex items-center gap-2 w-full sm:w-auto"
-      @click="exportExcel"
-      :class="{ 'btn-disabled': downloadExcelLock }"
-      :disabled="downloadExcelLock"
-    >
-      Export Excel
-    </button>
-
-    <!-- Import CSV -->
-    <button
-      class="btn-purple flex items-center gap-2 w-full sm:w-auto"
-      @click="showImportModal = true"
-    >
-      Import CSV
-    </button>
-
-  </div>
-</div>
-
-</div>
+      <!-- BUTTONS -->
+          <div
+            class="
+              mt-2
+              space-y-2
+              sm:mt-0
+              sm:space-y-0
+              sm:flex
+              sm:gap-3
+            "
+            :class="{
+              'hidden': !showExportMenu,
+              'block': showExportMenu,
+              'sm:block': true
+            }"
+          >
+          
+            <!-- Export CSV -->
+            <button
+              class="btn-green flex items-center gap-2 w-full sm:w-auto"
+              @click="exportCSV"
+              :class="{ 'btn-disabled': downloadCSVLock }"
+              :disabled="downloadCSVLock"
+            >
+              <!-- icon -->
+              Export CSV
+            </button>
+          
+            <!-- Export Excel -->
+            <button
+              class="btn-yellow flex items-center gap-2 w-full sm:w-auto"
+              @click="exportExcel"
+              :class="{ 'btn-disabled': downloadExcelLock }"
+              :disabled="downloadExcelLock"
+            >
+              Export Excel
+            </button>
+          
+            <!-- Import CSV -->
+            <button
+              class="btn-purple flex items-center gap-2 w-full sm:w-auto"
+              @click="showImportModal = true"
+            >
+              Import CSV
+            </button>
+          
+          </div>
+        </div>
+      </div>
 
 
       <!-- SEARCH -->
@@ -116,39 +114,38 @@
           >
             <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168ZM16.0247 15.8748C17.2475 14.6146 18 12.8956 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18C12.8956 18 14.6146 17.2475 15.8748 16.0247L16.0247 15.8748Z"/>
           </svg>
-      </div>
+        </div>
         <!-- SHOW ONLY WHEN SEARCHING AND RESULTS > 0 -->
-      <div
-          v-if="searchQuery.trim() && people.length > 0"
-          class="px-3 py-1 bg-gray-100 border rounded-full text-sm text-gray-400 mt-2"
-        >
-          <span class="font-semibold">{{ people.length }}</span>
-          {{ people.length === 1 ? 'Item' : 'Items' }}
-      </div>
+        <div
+            v-if="searchQuery.trim() && people.length > 0"
+            class="px-3 py-1 bg-gray-100 border rounded-full text-sm text-gray-400 mt-2"
+          >
+            <span class="font-semibold">{{ people.length }}</span>
+            {{ people.length === 1 ? 'Item' : 'Items' }}
+        </div>
 
       <!-- Bulk Delete -->
-      <div class="flex flex-row gap-2 items-center ">
-      <button
-        v-if="bulkMode && selectedRows.length > 0"
-        class="btn-red flex items-center gap-2 w-full sm:w-auto"
-        :disabled="selectedRows.length === 0"
-        @click="openBulkDeleteModal"
-      >
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path></svg>
-        Delete Selected ({{ selectedRows.length }})
-      </button>
-
-      <button 
-        v-if="bulkMode"
-        class="px-4 py-2 bg-gray-500 text-white flex items-center gap-2 rounded"
-        @click="cancelBulkMode"
-      >
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="rgba(255,255,255,1)"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM12 10.5858L14.8284 7.75736L16.2426 9.17157L13.4142 12L16.2426 14.8284L14.8284 16.2426L12 13.4142L9.17157 16.2426L7.75736 14.8284L10.5858 12L7.75736 9.17157L9.17157 7.75736L12 10.5858Z"></path></svg>
-        Cancel
-      </button>
+        <div class="flex flex-row gap-2 items-center ">
+          <button
+            v-if="bulkMode && selectedRows.length > 0"
+            class="btn-red flex items-center gap-2 w-full sm:w-auto"
+            :disabled="selectedRows.length === 0"
+            @click="openBulkDeleteModal"
+          >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path></svg>
+            Delete Selected ({{ selectedRows.length }})
+          </button>
+        
+          <button 
+            v-if="bulkMode"
+            class="px-4 py-2 bg-gray-500 text-white flex items-center gap-2 rounded"
+            @click="cancelBulkMode"
+          >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="rgba(255,255,255,1)"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM12 10.5858L14.8284 7.75736L16.2426 9.17157L13.4142 12L16.2426 14.8284L14.8284 16.2426L12 13.4142L9.17157 16.2426L7.75736 14.8284L10.5858 12L7.75736 9.17157L9.17157 7.75736L12 10.5858Z"></path></svg>
+            Cancel
+          </button>
+        </div>
       </div>
-      
-    </div>
 
       <!-- TABLE -->
       <div class="relative overflow-x-auto bg-white shadow rounded-lg border">
@@ -235,16 +232,40 @@
               <td v-else class="p-2 border text-center w-[50px]"></td>
             
               <!-- PHOTO -->
-              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate">
-                <template v-if="p.picture_url && !hasImageError[p.id]">
-                  <img 
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px]">
+                <div class="relative w-10 h-10 mx-auto">
+                
+                  <!-- REAL PHOTO -->
+                  <img
+                    v-if="p.picture_url && !hasImageError[p.id]"
                     :src="p.picture_url"
-                    class="w-10 h-10 rounded-full object-cover mx-auto"
+                    class="w-10 h-10 rounded-full object-cover border"
                     @error="hasImageError[p.id] = true"
                   />
-                </template>
-                <span v-else>No Photo</span>
+                
+                  <!-- LOGO FALLBACK -->
+                  <img
+                    v-else
+                    src="/assets/img/BAP-2.png"
+                    class="w-10 h-10 rounded-full object-contain border bg-white p-1"
+                    alt="No photo"
+                  />
+                
+                  <!-- OVERLAY (PHOTO ONLY) -->
+                  <div
+                    v-if="!p.picture_url || hasImageError[p.id]"
+                    class="absolute inset-0 rounded-full
+                          flex items-center justify-center
+                        bg-black/40"
+                  >
+                    <span class="text-[5px] text-white font-semibold">
+                      NO PHOTO
+                    </span>
+                  </div>
+                
+                </div>
               </td>
+
             
               <!-- NAME -->
               <td 
@@ -317,40 +338,38 @@
       <!-- PAGINATION -->
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mt-6">
 
-  <!-- Left: Page Text -->
-  <span class="text-sm text-gray-500 leading-tight">
-    Page {{ currentPage }} of {{ totalPages }}
-  </span>
+        <!-- Left: Page Text -->
+        <span class="text-sm text-gray-500 leading-tight">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
 
-  <!-- Right: Pagination Buttons -->
-  <div class="flex items-center gap-3">
-
-    <!-- Prev -->
-    <button
-      class="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300
-             text-gray-700 hover:bg-gray-200 hover:border-gray-400
-             transition disabled:opacity-50 disabled:hover:bg-gray-100 disabled:hover:border-gray-300"
-      :disabled="currentPage === 1"
-      @click="goPrevPage"
-    >
-      Prev
-    </button>
-
-    <!-- Next -->
-    <button
-      class="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300
-             text-gray-700 hover:bg-gray-200 hover:border-gray-400
-             transition disabled:opacity-50 disabled:hover:bg-gray-100 disabled:hover:border-gray-300"
-      :disabled="currentPage === totalPages"
-      @click="goNextPage"
-    >
-      Next
-    </button>
-
-  </div>
-</div>
-
-
+          <!-- Right: Pagination Buttons -->
+        <div class="flex items-center gap-3">
+        
+          <!-- Prev -->
+          <button
+            class="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300
+                  text-gray-700 hover:bg-gray-200 hover:border-gray-400
+                  transition disabled:opacity-50 disabled:hover:bg-gray-100 disabled:hover:border-gray-300"
+            :disabled="currentPage === 1"
+            @click="goPrevPage"
+          >
+            Prev
+          </button>
+        
+          <!-- Next -->
+          <button
+            class="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300
+                  text-gray-700 hover:bg-gray-200 hover:border-gray-400
+                  transition disabled:opacity-50 disabled:hover:bg-gray-100 disabled:hover:border-gray-300"
+            :disabled="currentPage === totalPages"
+            @click="goNextPage"
+          >
+            Next
+          </button>
+        
+        </div>
+      </div>
 
       <!-- MODALS & TEMPLATES -->
       <AddPersonelModal
@@ -538,1095 +557,1126 @@ export default {
     }
   },
 
-async mounted() {
-  usePageTitle('Admin People Directory')
-    this.supabase = useSupabaseClient()
-    await this.checkAdmin();
+  async mounted() {
+    usePageTitle('Admin People Directory')
+      this.supabase = useSupabaseClient()
+      await this.checkAdmin();
 
-    // Always load full people list FIRST
-    const allPeople = await this.loadAllPeople();
+      // Always load full people list FIRST
+      const allPeople = await this.loadAllPeople();
 
-    // Generate notifications from complete list
-    await this.checkExpirations(allPeople);
+      // Generate notifications from complete list
+      await this.checkExpirations(allPeople);
 
-    // Load UI paginated table
-    await this.loadPeople();
+      // Load UI paginated table
+      await this.loadPeople();
 
-    // Load notifications for popup
-    await this.refreshNotifications();
+      // Load notifications for popup
+      await this.refreshNotifications();
 
-    await this.checkMonthlyNotifications();
-
-
-
-  },
-  methods: {
-    /* ---------------- Helpers ---------------- */
-    formatFullName(p) {
-      if (!p) return ''
-      const mi = p.middle_initial ? p.middle_initial + '. ' : ''
-      const suffix = p.suffix ? ' ' + p.suffix : ''
-      return `${(p.first_name||'').trim()} ${mi}${(p.last_name||'').trim()}${suffix}`.replace(/\s+/g,' ').trim()
+      await this.checkMonthlyNotifications();
     },
+    methods: {
+      /* ---------------- Helpers ---------------- */
+      formatFullName(p) {
+        if (!p) return ''
+        const mi = p.middle_initial ? p.middle_initial + '. ' : ''
+        const suffix = p.suffix ? ' ' + p.suffix : ''
+        return `${(p.first_name||'').trim()} ${mi}${(p.last_name||'').trim()}${suffix}`.replace(/\s+/g,' ').trim()
+      },
 
-    formatMonthYear(value) {
-      if (!value) return ''
-      const d = new Date(value)
-      return d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
-    },
+      formatMonthYear(value) {
+        if (!value) return ''
+        const d = new Date(value)
+        return d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+      },
 
-    checkConnection() {
-      if (!navigator.onLine) {
-        this.loading = false
-        this.showNotification('Connection Error', 'No internet connection detected.', 'error')
-        return false
-      }
-      return true
-    },
+      checkConnection() {
+        if (!navigator.onLine) {
+          this.loading = false
+          this.showNotification('Connection Error', 'No internet connection detected.', 'error')
+          return false
+        }
+        return true
+      },
 
-    timeoutPromise(promise, ms = 10000) {
-      return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('timeout')), ms)
-        promise.then(res => {
-          clearTimeout(timer)
-          resolve(res)
-        }).catch(err => {
-          clearTimeout(timer)
-          reject(err)
+      timeoutPromise(promise, ms = 10000) {
+        return new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('timeout')), ms)
+          promise.then(res => {
+            clearTimeout(timer)
+            resolve(res)
+          }).catch(err => {
+            clearTimeout(timer)
+            reject(err)
+          })
         })
-      })
-    },
+      },
 
-    showNotification(title, message, type = 'success') {
-      this.noticeTitle = title
-      this.noticeMessage = message
-      this.noticeType = type
-      this.showNotice = true
-    },
+      showNotification(title, message, type = 'success') {
+        this.noticeTitle = title
+        this.noticeMessage = message
+        this.noticeType = type
+        this.showNotice = true
+      },
 
-    /* ---------------- Security ---------------- */
-    async checkAdmin() {
-      try {
-        const { data } = await this.supabase.auth.getSession()
-        const verified = localStorage.getItem('admin_verified') === 'true'
-        const trusted = localStorage.getItem('trusted_device') === 'true'
-        const temp = sessionStorage.getItem('temporary_trust') === 'true'
-        if (!data.session || !verified || (!trusted && !temp)) {
+      /* ---------------- Security ---------------- */
+      async checkAdmin() {
+        try {
+          const { data } = await this.supabase.auth.getSession()
+          const verified = localStorage.getItem('admin_verified') === 'true'
+          const trusted = localStorage.getItem('trusted_device') === 'true'
+          const temp = sessionStorage.getItem('temporary_trust') === 'true'
+          if (!data.session || !verified || (!trusted && !temp)) {
+            this.$router.push('/login')
+          }
+        } catch (err) {
+          console.error('checkAdmin error', err)
           this.$router.push('/login')
         }
-      } catch (err) {
-        console.error('checkAdmin error', err)
-        this.$router.push('/login')
-      }
-    },
+      },
 
-    /* ---------------- PDF ---------------- */
-    async downloadPDF(person) {
-      const key = `downloaded_${person.id}`
-      if (sessionStorage.getItem(key)) {
-        this.pdfTargetPerson = person
-        this.reDownloadModal = true
-        this.downloadLock = true
-        return
-      }
-
-      await this.performPDFDownload(person)
-      sessionStorage.setItem(key, 'true')
-    },
-
-    async performPDFDownload(person) {
-      if (!this.checkConnection()) return
-
-      this.loading = true
-      this.loadingMessage = 'Generating PDF...'
-      this.downloadLock = true
-
-      try {
-        // PeopleForm.exportPersonPDF should return a promise that triggers download
-        await this.timeoutPromise(this.$refs.PeopleForm.exportPersonPDF(person), 20000)
-        this.showNotification('PDF Ready', 'Download started.', 'success')
-        await this.logActivity('downloadPDF', `Download PDF for ${this.formatFullName(person)}`, person.work_id)
-      } catch (err) {
-        console.error('performPDFDownload', err)
-        if (err?.message === 'timeout') this.showNotification('Timeout', 'PDF generation timed out.', 'error')
-        else this.showNotification('Error', 'Failed to generate PDF.', 'error')
-      } finally {
-        this.loading = false
-        setTimeout(() => (this.downloadLock = false), 2000)
-      }
-    },
-
-    async confirmReDownload() {
-      if (!this.pdfTargetPerson) return
-      await this.performPDFDownload(this.pdfTargetPerson)
-      this.reDownloadModal = false
-    },
-
-    /* ---------------- Load People ---------------- */
-    async loadPeople() {
-      if (!this.checkConnection()) return
-
-      this.loading = true
-      this.loadingMessage = 'Loading people...'
-
-      try {
-        const from = (this.currentPage - 1) * this.pageSize
-        const to = from + this.pageSize - 1
-
-        let query = this.supabase
-          .from('people')
-          .select('*', { count: 'exact' })
-          .order('id', { ascending: false })
-          .range(from, to)
-
-        if (this.searchQuery.trim()) {
-          const s = this.searchQuery.trim()
-          query = query.or(
-            `first_name.ilike.%${s}%,middle_initial.ilike.%${s}%,last_name.ilike.%${s}%,suffix.ilike.%${s}%,work_id.ilike.%${s}%,region.ilike.%${s}%,designation.ilike.%${s}%,chapter.ilike.%${s}%`
-          )
+      /* ---------------- PDF ---------------- */
+      async downloadPDF(person) {
+        const key = `downloaded_${person.id}`
+        if (sessionStorage.getItem(key)) {
+          this.pdfTargetPerson = person
+          this.reDownloadModal = true
+          this.downloadLock = true
+          return
         }
 
-        const { data, count, error } = await this.timeoutPromise(query, 10000)
-        if (error) throw error
+        await this.performPDFDownload(person)
+        sessionStorage.setItem(key, 'true')
+      },
 
-        this.people = data || []
-        this.totalPages = Math.max(1, Math.ceil((count || this.people.length) / this.pageSize))
-      } catch (err) {
-        console.error('loadPeople', err)
-        await this.logError('loadPeople', err.message || String(err))
-        if (err?.message === 'timeout') this.showNotification('Timeout', 'Server not responding. Try again.', 'error')
-        else this.showNotification('Error', 'Failed to load people. Check your connection.', 'error')
-      } finally {
-        this.loading = false
-      }
-    },
+      async performPDFDownload(person) {
+        if (!this.checkConnection()) return
 
-    handleSearch() {
-      this.currentPage = 1
+        this.loading = true
+        this.loadingMessage = 'Generating PDF...'
+        this.downloadLock = true
 
-      clearTimeout(this.searchDebounce)
-      this.searchDebounce = setTimeout(() => {
-        this.loadPeople()
-      }, 600)
-    },
+        try {
+          await this.timeoutPromise(this.$refs.PeopleForm.exportPersonPDF(person), 20000)
+          this.showNotification('PDF Ready', 'Download started.', 'success')
+          await this.logActivity('downloadPDF', `Download PDF for ${this.formatFullName(person)}`, person.work_id)
+        }  catch (err) {
+          console.error('performPDFDownload', err)
+          if (err?.message === 'timeout') this.showNotification('Timeout', 'PDF generation timed out.', 'error')
+          else this.showNotification('Error', 'Failed to generate PDF.', 'error')
+        } finally {
+          this.loading = false
+          setTimeout(() => (this.downloadLock = false), 2000)
+        }
+      },
 
-    goPrevPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--
-        this.loadPeople()
-      }
-    },
+      async confirmReDownload() {
+        if (!this.pdfTargetPerson) return
+        await this.performPDFDownload(this.pdfTargetPerson)
+        this.reDownloadModal = false
+      },
 
-    goNextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++
-        this.loadPeople()
-      }
-    },
+    /* ---------------- Load People ---------------- */
+      async loadPeople() {
+        if (!this.checkConnection()) return
 
-    async loadAllPeople() {
-    const { data } = await this.supabase
-    .from("people")
-    .select("*");
+        this.loading = true
+        this.loadingMessage = 'Loading people...'
 
-  return data || [];
-},
+        try {
+          const from = (this.currentPage - 1) * this.pageSize
+          const to = from + this.pageSize - 1
+
+          let query = this.supabase
+            .from('people')
+            .select('*', { count: 'exact' })
+            .order('id', { ascending: false })
+            .range(from, to)
+
+          if (this.searchQuery.trim()) {
+            const s = this.searchQuery.trim()
+            query = query.or(
+              `first_name.ilike.%${s}%,middle_initial.ilike.%${s}%,last_name.ilike.%${s}%,suffix.ilike.%${s}%,work_id.ilike.%${s}%,region.ilike.%${s}%,designation.ilike.%${s}%,chapter.ilike.%${s}%`
+            )
+          }
+
+          const { data, count, error } = await this.timeoutPromise(query, 10000)
+          if (error) throw error
+
+          this.people = data || []
+          this.totalPages = Math.max(1, Math.ceil((count || this.people.length) / this.pageSize))
+        } catch (err) {
+          console.error('loadPeople', err)
+          await this.logError('loadPeople', err.message || String(err))
+          if (err?.message === 'timeout') this.showNotification('Timeout', 'Server not responding. Try again.', 'error')
+          else this.showNotification('Error', 'Failed to load people. Check your connection.', 'error')
+        } finally {
+          this.loading = false
+        }
+      },
+
+      handleSearch() {
+        this.currentPage = 1
+
+        clearTimeout(this.searchDebounce)
+        this.searchDebounce = setTimeout(() => {
+          this.loadPeople()
+        }, 600)
+      },
+
+      goPrevPage() {
+        if (this.currentPage > 1) {
+          this.currentPage--
+          this.loadPeople()
+        }
+      },
+
+      goNextPage() {
+        if (this.currentPage < this.totalPages) {
+          this.currentPage++
+          this.loadPeople()
+        }
+      },
+
+      async loadAllPeople() {
+        const { data } = await this.supabase
+        .from("people")
+        .select("*");
+        return data || [];
+      },
 
 
     /* ---------------- Modal logic ---------------- */
-    openAddModal() {
-      this.isEditing = false
-      this.selectedPerson = null
-      this.form = {
-        first_name: '',
-        middle_initial: '',
-        last_name: '',
-        work_id: '',
-        region: '',
-        designation: '',
-        chapter: '',
-        valid_until: '',
-        emergency_name: '',
-        emergency_cp: '',
-        emergency_address: '',
-        picture_url: ''
-      }
-      this.photoFile = null
-      this.showModal = true
-    },
+      openAddModal() {
+        this.isEditing = false
+        this.selectedPerson = null
+        this.form = {
+          first_name: '',
+          middle_initial: '',
+          last_name: '',
+          work_id: '',
+          region: '',
+          designation: '',
+          chapter: '',
+          valid_until: '',
+          emergency_name: '',
+          emergency_cp: '',
+          emergency_address: '',
+          picture_url: ''
+        }
+        this.photoFile = null
+        this.showModal = true
+      },
 
-    openEditModal(person) {
-      this.isEditing = true
-      this.selectedPerson = person
-      this.form = { ...person }
-      this.photoFile = null
-      this.showModal = true
-      this.downloadLock = false
-    },
+      openEditModal(person) {
+        this.isEditing = true
+        this.selectedPerson = person
+        this.form = { ...person }
+        this.photoFile = null
+        this.showModal = true
+        this.downloadLock = false
+      },
 
-    openDeleteModal(person) {
-      this.downloadLock = false
-      this.selectedPerson = person
-      this.showDeleteModal = true
-    },
+      openDeleteModal(person) {
+        this.downloadLock = false
+        this.selectedPerson = person
+        this.showDeleteModal = true
+      },
 
-    closeModal() {
-      this.showModal = false
-      this.photoFile = null
-    },
+      closeModal() {
+        this.showModal = false
+        this.photoFile = null
+      },
 
-    handleModalSubmit({ form, photoFile }) {
-      this.form = form
-      this.photoFile = photoFile
-      if (this.isEditing) this.updatePerson()
-      else this.addPerson()
-    },
-    confirmLogout() {
-      this.showLogout = false;
+      handleModalSubmit({ form, photoFile }) {
+        this.form = form
+        this.photoFile = photoFile
+        if (this.isEditing) this.updatePerson()
+        else this.addPerson()
+      },
+      async confirmLogout() {
+        this.showLogout = false;
+        this.loading = true;
+        this.loadingMessage = "Logging out...";
 
-      // 🔵 Start loading indicator
-      this.loading = true;
-      this.loadingMessage = "Logging out...";
-
-      // 🔴 Sign out
-      this.supabase.auth.signOut().finally(() => {
-        // Remove auth flags
-        localStorage.removeItem("admin_verified");
-        sessionStorage.removeItem("temporary_trust");
-      
-        // Stop loading after a small delay for smoother UI
-        setTimeout(() => {
-          this.loading = false;
-          this.$router.push("/login");
-        }, 400);
-      });
-    },
+        await this.logAdminLogout();
+        // 🔴 Sign out
+        this.supabase.auth.signOut().finally(() => {
+          // Remove auth flags
+          localStorage.removeItem("admin_verified");
+          sessionStorage.removeItem("temporary_trust");
+        
+          // Stop loading after a small delay for smoother UI
+          setTimeout(() => {
+            this.loading = false;
+            this.$router.push("/login");
+          }, 400);
+        });
+      },
     /* ---------------- Upload photo ---------------- */
-    async uploadPhoto() {
-  if (!this.photoFile) {
-    return {
-      picture_url: this.form.picture_url || '',
-      picture_filename: this.form.picture_filename || ''
-    };
-  }
-
-  const extension = this.photoFile.name.split('.').pop();
-  const filename = `${crypto.randomUUID()}.${extension}`;
-
-  try {
-    // Upload photo
-    const { error } = await this.supabase.storage
-      .from('people_photos')
-      .upload(filename, this.photoFile);
-
-    if (error) throw error;
-
-    // Get public URL
-    const { data: urlData } = this.supabase.storage
-      .from('people_photos')
-      .getPublicUrl(filename);
-
-    return {
-      picture_url: urlData.publicUrl,
-      picture_filename: filename
-    };
-  } catch (err) {
-    console.error("uploadPhoto error:", err);
-
-    return {
-      picture_url: this.form.picture_url || '',
-      picture_filename: this.form.picture_filename || ''
-    };
-  }
-},
+      async uploadPhoto() {
+        if (!this.photoFile) {
+          return {
+            picture_url: this.form.picture_url || '',
+            picture_filename: this.form.picture_filename || ''
+          };
+        }
+      
+        const extension = this.photoFile.name.split('.').pop();
+        const filename = `${crypto.randomUUID()}.${extension}`;
+      
+        try {
+          // Upload photo
+          const { error } = await this.supabase.storage
+            .from('people_photos')
+            .upload(filename, this.photoFile);
+        
+          if (error) throw error;
+        
+          // Get public URL
+          const { data: urlData } = this.supabase.storage
+            .from('people_photos')
+            .getPublicUrl(filename);
+        
+          return {
+            picture_url: urlData.publicUrl,
+            picture_filename: filename
+          };
+        } catch (err) {
+          console.error("uploadPhoto error:", err);
+        
+          return {
+            picture_url: this.form.picture_url || '',
+            picture_filename: this.form.picture_filename || ''
+          };
+        }
+      },
 
     /* ---------------- CRUD ---------------- */
-    async addPerson() {
-      if (!this.checkConnection()) return
+      async addPerson() {
+        if (!this.checkConnection()) return
 
-      this.loading = true
-      this.loadingMessage = 'Adding person...'
+        this.loading = true
+        this.loadingMessage = 'Adding person...'
 
-      try {
-        const { picture_url, picture_filename } = await this.uploadPhoto()
-        const isoDate = this.normalizeValidUntil(this.form.valid_until);
+        try {
+          const { picture_url, picture_filename } = await this.uploadPhoto()
+          const isoDate = this.normalizeValidUntil(this.form.valid_until);
 
-        const { full_name, ...cleanData } = this.form;
+          const { full_name, ...cleanData } = this.form;
 
-        await this.supabase.from("people").insert([
-          { 
-            ...cleanData,
+          await this.supabase.from("people").insert([
+            { 
+              ...cleanData,
+              valid_until: isoDate,
+              picture_url,
+              picture_filename
+            }
+          ]);
+
+          await this.logActivity(
+            'addPerson',
+            'Added Person',
+            this.form.work_id,
+            {
+              work_id: this.form.work_id,
+              full_name: this.formatFullName(this.form),
+              region: this.form.region,
+              chapter: this.form.chapter,
+              designation: this.form.designation
+            }
+          )
+
+          this.showNotification('Success!', 'Person added successfully!', 'success')
+          this.closeModal()
+          await this.loadPeople()
+        } catch (err) {
+          console.error('addPerson', err)
+          await this.logError('addPerson', err.message || String(err), this.form)
+          if (err?.message === 'timeout') this.showNotification('Timeout', 'Failed to add person. Server not responding.', 'error')
+          else this.showNotification('Error', 'Failed to add person. Check your connection.', 'error')
+        } finally {
+          this.loading = false
+        }
+      },
+
+      async updatePerson() {
+        if (!this.checkConnection()) return;
+            
+        this.loading = true;
+        this.loadingMessage = "Updating person...";
+            
+        try {
+          const before = { ...this.selectedPerson };
+        
+          // Preserve current values
+          let picture_url = before.picture_url;
+          let picture_filename = before.picture_filename;
+        
+          // If user uploaded a new photo
+          if (this.photoFile) {
+          
+            // Delete old file only if it exists
+            if (before.picture_filename) {
+              await this.deletePhotoFromStorage(before.picture_filename);
+            }
+          
+            // Upload new photo → returns { picture_url, picture_filename }
+            const uploaded = await this.uploadPhoto();
+            picture_url = uploaded.picture_url;
+            picture_filename = uploaded.picture_filename;
+          }
+        
+          // Normalize date
+          const isoDate = this.normalizeValidUntil(this.form.valid_until);
+        
+          const after = {
+            ...this.form,
             valid_until: isoDate,
             picture_url,
             picture_filename
-          }
-        ]);
-
-        await this.logActivity(
-          'addPerson',
-          'Added Person',
-          this.form.work_id,
-          {
-            work_id: this.form.work_id,
-            full_name: this.formatFullName(this.form),
-            region: this.form.region,
-            chapter: this.form.chapter,
-            designation: this.form.designation
-          }
-        )
-
-        this.showNotification('Success!', 'Person added successfully!', 'success')
-        this.closeModal()
-        await this.loadPeople()
-      } catch (err) {
-        console.error('addPerson', err)
-        await this.logError('addPerson', err.message || String(err), this.form)
-        if (err?.message === 'timeout') this.showNotification('Timeout', 'Failed to add person. Server not responding.', 'error')
-        else this.showNotification('Error', 'Failed to add person. Check your connection.', 'error')
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async updatePerson() {
-  if (!this.checkConnection()) return;
-
-  this.loading = true;
-  this.loadingMessage = "Updating person...";
-
-  try {
-    const before = { ...this.selectedPerson };
-
-    // Preserve current values
-    let picture_url = before.picture_url;
-    let picture_filename = before.picture_filename;
-
-    // If user uploaded a new photo
-    if (this.photoFile) {
-
-      // Delete old file only if it exists
-      if (before.picture_filename) {
-        await this.deletePhotoFromStorage(before.picture_filename);
-      }
-
-      // Upload new photo → returns { picture_url, picture_filename }
-      const uploaded = await this.uploadPhoto();
-      picture_url = uploaded.picture_url;
-      picture_filename = uploaded.picture_filename;
-    }
-
-    // Normalize date
-    const isoDate = this.normalizeValidUntil(this.form.valid_until);
-
-    const after = {
-      ...this.form,
-      valid_until: isoDate,
-      picture_url,
-      picture_filename
-    };
-
-    const changes = this.generateChanges(before, after);
-
-    // Remove full_name before update
-    const { full_name, ...cleanData } = after;
-
-    // Update database
-    await this.timeoutPromise(
-      this.supabase
-        .from("people")
-        .update(cleanData)
-        .eq("id", this.selectedPerson.id),
-      10000
-    );
-
-    // Update notifications
-    await this.updateNotificationForPerson(this.selectedPerson.id);
-
-    // Log activity
-    await this.logActivity(
-      "updatedPerson",
-      "Updated Person",
-      this.form.work_id,
-      {
-        work_id: this.form.work_id,
-        full_name: this.formatFullName(after),
-        changes: changes.length
-          ? changes
-          : [{ field: "No Changes", oldValue: "-", newValue: "-" }]
-      }
-    );
-
-    this.showNotification("Updated!", "Person updated successfully!", "warning");
-    this.closeModal();
-
-    await this.loadPeople();
-
-  } catch (err) {
-    console.error("updatePerson", err);
-
-    await this.logError(
-      "updatePerson",
-      err.message || String(err),
-      { person_id: this.selectedPerson?.id, form: this.form }
-    );
-
-    this.showNotification("Error", "Failed to update person.", "error");
-
-  } finally {
-    this.loading = false;
-  }
-},
-
-
-
-    async deletePerson() {
-      if (!this.checkConnection()) return;
-
-      this.loading = true;
-      this.loadingMessage = "Deleting person...";
-
-      try {
-        // Delete photo from storage (if exists)
-        if (this.selectedPerson.picture_filename) {
-          await this.deletePhotoFromStorage(this.selectedPerson.picture_filename);
+          };
+        
+          const changes = this.generateChanges(before, after);
+        
+          // Remove full_name before update
+          const { full_name, ...cleanData } = after;
+        
+          // Update database
+          await this.timeoutPromise(
+            this.supabase
+              .from("people")
+              .update(cleanData)
+              .eq("id", this.selectedPerson.id),
+            10000
+          );
+        
+          // Update notifications
+          await this.updateNotificationForPerson(this.selectedPerson.id);
+        
+          // Log activity
+          await this.logActivity(
+            "updatedPerson",
+            "Updated Person",
+            this.form.work_id,
+            {
+              work_id: this.form.work_id,
+              full_name: this.formatFullName(after),
+              changes: changes.length
+                ? changes
+                : [{ field: "No Changes", oldValue: "-", newValue: "-" }]
+            }
+          );
+          
+          this.showNotification("Updated!", "Person updated successfully!", "warning");
+          this.closeModal();
+          
+          await this.loadPeople();
+          
+        } catch (err) {
+          console.error("updatePerson", err);
+        
+          await this.logError(
+            "updatePerson",
+            err.message || String(err),
+            { person_id: this.selectedPerson?.id, form: this.form }
+          );
+        
+          this.showNotification("Error", "Failed to update person.", "error");
+        
+        } finally {
+          this.loading = false;
         }
+      },      
       
-        // Delete person from DB
-        await this.timeoutPromise(
-          this.supabase
-            .from("people")
-            .delete()
-            .eq("id", this.selectedPerson.id),
-          10000
-        );
-      
-        // Log activity
-        await this.logActivity(
-          "deletedPerson",
-          "Deleted Person",
-          this.selectedPerson.work_id,
-          {
-            work_id: this.selectedPerson.work_id,
-            full_name: this.formatFullName(this.selectedPerson),
-            region: this.selectedPerson.region,
-            chapter: this.selectedPerson.chapter,
-            designation: this.selectedPerson.designation,
-            photo_deleted: !!this.selectedPerson.picture_url
+      async deletePerson() {
+        if (!this.checkConnection()) return;
+
+        this.loading = true;
+        this.loadingMessage = "Deleting person...";
+
+        try {
+          // Delete photo from storage (if exists)
+          if (this.selectedPerson.picture_filename) {
+            await this.deletePhotoFromStorage(this.selectedPerson.picture_filename);
           }
-        );
         
-        this.showNotification("Deleted!", "Person has been removed.", "error");
-        this.showDeleteModal = false;
+          // Delete person from DB
+          await this.timeoutPromise(
+            this.supabase
+              .from("people")
+              .delete()
+              .eq("id", this.selectedPerson.id),
+            10000
+          );
         
-        await this.loadPeople();
+          // Log activity
+          await this.logActivity(
+            "deletedPerson",
+            "Deleted Person",
+            this.selectedPerson.work_id,
+            {
+              work_id: this.selectedPerson.work_id,
+              full_name: this.formatFullName(this.selectedPerson),
+              region: this.selectedPerson.region,
+              chapter: this.selectedPerson.chapter,
+              designation: this.selectedPerson.designation,
+              photo_deleted: !!this.selectedPerson.picture_url
+            }
+          );
+          
+          this.showNotification("Deleted!", "Person has been removed.", "error");
+          this.showDeleteModal = false;
+          
+          await this.loadPeople();
+          
+        } catch (err) {
+          console.error("deletePerson", err);
+          await this.logError(
+            "deletePerson",
+            err.message || String(err),
+            { person_id: this.selectedPerson?.work_id }
+          );
         
-      } catch (err) {
-        console.error("deletePerson", err);
-        await this.logError(
-          "deletePerson",
-          err.message || String(err),
-          { person_id: this.selectedPerson?.work_id }
-        );
-      
-        this.showNotification("Error", "Failed to delete person.", "error");
-      } finally {
-        this.loading = false;
-      }
-    },
+          this.showNotification("Error", "Failed to delete person.", "error");
+        } finally {
+          this.loading = false;
+        }
+      },  
 
-    async deletePhotoFromStorage(filename) {
-  if (!filename) return;
+      async deletePhotoFromStorage(filename) {
+        if (!filename) return;
 
-  try {
-    const { error } = await this.supabase.storage
-      .from('people_photos')
-      .remove([filename]);
-
-    if (error) console.warn("Failed to delete:", filename, error);
-  } catch (err) {
-    console.error("deletePhotoFromStorage error:", err);
-  }
-},
-
-
+        try {
+          const { error } = await this.supabase.storage
+            .from('people_photos')
+            .remove([filename]);
+        
+          if (error) console.warn("Failed to delete:", filename, error);
+        } catch (err) {
+          console.error("deletePhotoFromStorage error:", err);
+        }
+      },
     /* ---------------- Exports ---------------- */
-    exportCSV() {
-      const key = 'csv_downloaded'
-      if (sessionStorage.getItem(key)) {
-        this.reDownloadCSVModal = true
-        return
-      }
-      this.performCSVExport().then(() => sessionStorage.setItem(key, 'true'))
-    },
+      exportCSV() {
+        const key = 'csv_downloaded'
+        if (sessionStorage.getItem(key)) {
+          this.reDownloadCSVModal = true
+          return
+        }
+        this.performCSVExport().then(() => sessionStorage.setItem(key, 'true'))
+      },
 
-    async performCSVExport() {
-      if (!this.people.length) return
+      async performCSVExport() {
+        if (!this.people.length) return
 
-      let csv = 'Full Name,Work ID,Region,Designation,Valid Until\n'
-      this.people.forEach(p => {
-        csv += `${this.formatFullName(p)},${p.work_id},${p.region},${p.designation},${p.valid_until}\n`
-      })
+        let csv = 'Full Name,Work ID,Region,Designation,Chapter,Valid Until\n'
+        this.people.forEach(p => {
+          csv += `${this.formatFullName(p)},${p.work_id},${p.region},${p.designation},${p.chapter},${p.valid_until}\n`
+        })
 
-      const blob = new Blob([csv], { type: 'text/csv' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'people.csv'
-      a.click()
+        const blob = new Blob([csv], { type: 'text/csv' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'people.csv'
+        a.click()
 
-      await this.logActivity('exportCSV', 'Download CSV file', null, { total_rows: this.people.length })
-    },
+        await this.logActivity('exportCSV', 'Download CSV file', null, { total_rows: this.people.length })
+      },  
 
-    exportExcel() {
-      const key = 'excel_downloaded'
-      if (sessionStorage.getItem(key)) {
-        this.reDownloadExcelModal = true
-        return
-      }
-      this.performExcelExport().then(() => sessionStorage.setItem(key, 'true'))
-    },
+      exportExcel() {
+        const key = 'excel_downloaded'
+        if (sessionStorage.getItem(key)) {
+          this.reDownloadExcelModal = true
+          return
+        }
+        this.performExcelExport().then(() => sessionStorage.setItem(key, 'true'))
+      },  
 
-    async performExcelExport() {
-      if (!this.people.length) return
+      async performExcelExport() {
+        if (!this.people.length) return
 
-      let table = `
-        <table>
-          <tr>
-            <th>Name</th><th>Work ID</th>
-            <th>Region</th><th>Designation</th><th>Valid Until</th>
-          </tr>
-        ${this.people
-          .map(p => `
-          <tr>
-            <td>${this.formatFullName(p)}</td>
-            <td>${p.work_id}</td>
-            <td>${p.region}</td>
-            <td>${p.designation}</td>
-            <td>${this.formatMonthYear(p.valid_until)}</td>
-          </tr>`).join('')}
-        </table>`
+        let table = `
+          <table>
+            <tr>
+              <th>Name</th><th>ID No.</th>
+              <th>Region</th><th>Chapter</th><th>Designation</th><th>Valid Until</th>
+            </tr>
+          ${this.people
+            .map(p => `
+            <tr>
+              <td>${this.formatFullName(p)}</td>
+              <td>${p.work_id}</td>
+              <td>${p.region}</td>
+              <td>${p.chapter}</td>
+              <td>${p.designation}</td>
+              <td>${this.formatMonthYear(p.valid_until)}</td>
+            </tr>`).join('')}
+          </table>`
 
-      const blob = new Blob([table], { type: 'application/vnd.ms-excel' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'people.xls'
-      a.click()
+        const blob = new Blob([table], { type: 'application/vnd.ms-excel' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'people.xls'
+        a.click()
 
-      await this.logActivity('exportExcel', 'Download Excel file', null, { total_rows: this.people.length })
-    },
+        await this.logActivity('exportExcel', 'Download Excel file', null, { total_rows: this.people.length })
+      },
 
-    confirmReDownloadCSV() {
-      this.performCSVExport()
-      this.reDownloadCSVModal = false
-    },
+      confirmReDownloadCSV() {
+        this.performCSVExport()
+        this.reDownloadCSVModal = false
+      },
 
-    confirmReDownloadExcel() {
-      this.performExcelExport()
-      this.reDownloadExcelModal = false
-    },
+      confirmReDownloadExcel() {
+        this.performExcelExport()
+        this.reDownloadExcelModal = false
+      },
 
     /* ---------------- Logging ---------------- */
-    async logError(action, message, details = {}) {
-      try {
-        await this.supabase.from('error_logs').insert([{ action, message, details, created_at: new Date() }])
-      } catch (err) {
-        console.error('Failed to log error to db:', err)
-      }
-    },
+      async logError(action, message, details = {}) {
+        try {
+          await this.supabase.from('error_logs').insert([{ action, message, details, created_at: new Date() }])
+        } catch (err) {
+          console.error('Failed to log error to db:', err)
+        }
+      },
 
-    async logActivity(action, description, personId = null, metadata = {}) {
-      try {
+      async logActivity(action, description, personId = null, metadata = {}) {
         const { data: sessionData } = await this.supabase.auth.getSession()
         const adminId = sessionData?.session?.user?.id || null
 
-        await this.supabase.from('activity_logs').insert([{
-          action,
-          description,
-          person_id: personId,
-          admin_id: adminId,
-          metadata,
-          created_at: new Date()
-        }])
-      } catch (err) {
-        console.error('failed to record activity log:', err)
-      }
-    },
+        const { error } = await this.supabase
+          .from('activity_logs')
+          .insert([{
+            action,
+            description,
+            person_id: personId,
+            admin_id: adminId,
+            metadata,
+            created_at: new Date().toISOString()
+          }])
+
+        if (error) {
+          console.error('ACTIVITY LOG FAILED:', error)
+        }
+      },
 
     /* ---------------- Utilities ---------------- */
-    generateChanges(before, after) {
-      const changes = []
-      for (const key in after) {
-        if (before[key] !== after[key]) {
-          changes.push({ field: key, oldValue: before[key] ?? '', newValue: after[key] ?? '' })
+      generateChanges(before, after) {
+        const changes = []
+        for (const key in after) {
+          if (before[key] !== after[key]) {
+            changes.push({ field: key, oldValue: before[key] ?? '', newValue: after[key] ?? '' })
+          }
         }
-      }
-      return changes
-    },
-    toggleSelectAll() {
-      if (this.selectAll) {
-        this.selectedRows = [...this.people]
-      } else {
-        this.selectedRows = []
-      }
-    },
-    openBulkDeleteModal() {
-    this.showBulkDeleteModal = true
-    },
-    async bulkDelete() {
-      if (!this.checkConnection()) return;
-
-      this.loading = true;
-      this.loadingMessage = "Deleting selected people...";
-
-    try {
-      const ids = this.selectedRows.map(p => p.id);
-      const workIds = this.selectedRows.map(p => p.work_id);
-
-      await this.supabase
-        .from("people")
-        .delete()
-        .in("id", ids);
-
-    // Activity log
-      await this.logActivity(
-        "bulkDelete",
-        `Bulk deleted ${ids.length} people`,
-        null,
-        {
-          total_deleted: ids.length,
-          work_ids: workIds
+        return changes
+      },
+      toggleSelectAll() {
+        if (this.selectAll) {
+          this.selectedRows = [...this.people]
+        } else {
+          this.selectedRows = []
         }
-      );
+      },
 
-      this.showNotification("Deleted!", `${ids.length} people removed.`, "error");
+      openBulkDeleteModal() {
+      this.showBulkDeleteModal = true
+      },
 
-      this.selectedRows = [];
-      this.selectAll = false;
-      this.showBulkDeleteModal = false;
+      async bulkDelete() {
+        if (!this.checkConnection()) return;
 
-      await this.loadPeople();
+        this.loading = true;
+        this.loadingMessage = "Deleting selected people...";
 
-    } catch (err) {
-      console.error(err);
-      await this.logError("bulkDelete", err.message, { ids: this.selectedRows });
+      try {
+        const ids = this.selectedRows.map(p => p.id);
+        const workIds = this.selectedRows.map(p => p.work_id);
 
-      this.showNotification("Error", "Bulk delete failed.", "error");
-    }
+        await this.supabase
+          .from("people")
+          .delete()
+          .in("id", ids);
 
-    this.loading = false;
-    },
-    cancelBulkMode() {
-      this.bulkMode = false;
-      this.selectAll = false;
-      this.selectedRows = [];
-    },
-    async processBulkImport({ rows, photoFiles }) {
-      // rows: array of objects ready to be inserted
-      // photoFiles: plain object { filename: File, ... } coming from modal
-      if (!rows || !rows.length) return;
-      if (!this.checkConnection()) return;
-      // prepare
-      this.importProgress.running = true;
-      this.importProgress.percent = 0;
-      this.importProgress.message = 'Starting import...';
-      this.importProgress.photosTotal = 0;
-      this.importProgress.photosUploaded = 0;
-      this.importProgress.photosSkipped = 0;
-      this.importProgress.photosFailed = 0;
-      this.importProgress.rowsInserted = 0;
-      // convert photoFiles to Map for convenience
-      const photoMap = new Map(Object.entries(photoFiles || {}));
-      // find which rows reference photo filenames
-      // common CSV mapping field name we used: photo_filename
-      const rowsWithPhoto = rows.filter(r => r.photo_filename && String(r.photo_filename).trim());
-      this.importProgress.photosTotal = rowsWithPhoto.length;
-      // batch settings
-      const photoQueue = [...rowsWithPhoto]; // clone
-      const batchSize = 500; // DB insert batch
-      const uploadConcurrency = 4; // upload concurrency for photos
-      const bucket = 'people_photos';
-      // helper: check if file exists in storage by attempting download()
-      const fileExistsInStorage = async (filename) => {
-        try {
-          const { data, error } = await this.supabase.storage.from(bucket).download(filename);
-          if (error && error.status === 404) return false;
-          if (error) {
-            // some other error — treat as not existing but log
-            console.warn('storage.download error (treated as not exists):', filename, error);
+      // Activity log
+        await this.logActivity(
+          "bulkDelete",
+          `Bulk deleted ${ids.length} people`,
+          null,
+          {
+            total_deleted: ids.length,
+            work_ids: workIds
+          }
+        );
+
+        this.showNotification("Deleted!", `${ids.length} people removed.`, "error");
+
+        this.selectedRows = [];
+        this.selectAll = false;
+        this.showBulkDeleteModal = false;
+
+        await this.loadPeople();
+
+      } catch (err) {
+        console.error(err);
+        await this.logError("bulkDelete", err.message, { ids: this.selectedRows });
+
+        this.showNotification("Error", "Bulk delete failed.", "error");
+      }
+
+      this.loading = false;
+      },
+
+      cancelBulkMode() {
+        this.bulkMode = false;
+        this.selectAll = false;
+        this.selectedRows = [];
+      },
+
+      async processBulkImport({ rows, photoFiles }) {
+        // rows: array of objects ready to be inserted
+        // photoFiles: plain object { filename: File, ... } coming from modal
+        if (!rows || !rows.length) return;
+        if (!this.checkConnection()) return;
+        // prepare
+        this.importProgress.running = true;
+        this.importProgress.percent = 0;
+        this.importProgress.message = 'Starting import...';
+        this.importProgress.photosTotal = 0;
+        this.importProgress.photosUploaded = 0;
+        this.importProgress.photosSkipped = 0;
+        this.importProgress.photosFailed = 0;
+        this.importProgress.rowsInserted = 0;
+        // convert photoFiles to Map for convenience
+        const photoMap = new Map(Object.entries(photoFiles || {}));
+        // find which rows reference photo filenames
+        // common CSV mapping field name we used: photo_filename
+        const rowsWithPhoto = rows.filter(r => r.photo_filename && String(r.photo_filename).trim());
+        this.importProgress.photosTotal = rowsWithPhoto.length;
+        // batch settings
+        const photoQueue = [...rowsWithPhoto]; // clone
+        const batchSize = 500; // DB insert batch
+        const uploadConcurrency = 4; // upload concurrency for photos
+        const bucket = 'people_photos';
+        // helper: check if file exists in storage by attempting download()
+        const fileExistsInStorage = async (filename) => {
+          try {
+            const { data, error } = await this.supabase.storage.from(bucket).download(filename);
+            if (error && error.status === 404) return false;
+            if (error) {
+              // some other error — treat as not existing but log
+              console.warn('storage.download error (treated as not exists):', filename, error);
+              return false;
+            }
+            // data is a Blob — file exists
+            return true;
+          } catch (err) {
+            console.warn('fileExistsInStorage catch:', err);
             return false;
           }
-          // data is a Blob — file exists
-          return true;
-        } catch (err) {
-          console.warn('fileExistsInStorage catch:', err);
-          return false;
-        }
-      };
-    
-      // helper: upload file
-      const uploadFile = async (file, filename) => {
-        try {
-          const { data, error } = await this.supabase.storage.from(bucket).upload(filename, file);
-          if (error) throw error;
-          // get public url
-          const { data: urlData } = this.supabase.storage.from(bucket).getPublicUrl(filename);
-          return urlData.publicUrl || null;
-        } catch (err) {
-          console.error('uploadFile error', filename, err);
-          return null;
-        }
-      };
-    
-      // upload worker with limited concurrency
-      const uploadWorker = async () => {
-        while (photoQueue.length && !this.importProgress.cancelRequested) {
-          const row = photoQueue.shift();
-          const filename = row.photo_filename?.trim();
-          if (!filename) {
-            this.importProgress.photosFailed++;
-            continue;
-          }
-        
-          // see if we actually have the file in selected folder
-          const fileObj = this.findMatchingPhoto(photoMap, filename);
-          if (!fileObj) {
-            // file not provided by admin — skip
-            this.importProgress.photosSkipped++;
-            continue;
-          }
-        
+        };
+      
+        // helper: upload file
+        const uploadFile = async (file, filename) => {
           try {
-            // check if exists in storage
-            const exists = await fileExistsInStorage(filename);
-            if (exists) {
-              // reuse public url
-              const { data: urlData } = this.supabase.storage.from(bucket).getPublicUrl(filename);
-              row.picture_url = urlData.publicUrl || "";
-              this.importProgress.photosSkipped++;
-            } else {
-              // upload
-              let publicUrl = null
-              let attempts = 0
-              while (!publicUrl && attempts < 3) {
-                attempts++
-                publicUrl = await uploadFile(fileObj, filename)
-              }
-              if (publicUrl) {
-                row.picture_url = publicUrl;
-                this.importProgress.photosUploaded++;
-              } else {
-                this.importProgress.photosFailed++;
-                row.picture_url = "";
-              }
-            }
+            const { data, error } = await this.supabase.storage.from(bucket).upload(filename, file);
+            if (error) throw error;
+            // get public url
+            const { data: urlData } = this.supabase.storage.from(bucket).getPublicUrl(filename);
+            return urlData.publicUrl || null;
           } catch (err) {
-            console.error('photo upload/exists check error', filename, err);
-            this.importProgress.photosFailed++;
-            row.picture_url = "";
-          } finally {
-            // update percent (rough)
-            const donePhotos = this.importProgress.photosUploaded + this.importProgress.photosSkipped + this.importProgress.photosFailed;
-            this.importProgress.percent = Math.round((donePhotos / Math.max(1, this.importProgress.photosTotal)) * 100 * 0.6); // photos weigh 60% of progress
+            console.error('uploadFile error', filename, err);
+            return null;
           }
-        }
-      };
-    
-      try {
-        // spawn concurrent upload workers
-        const workers = [];
-        for (let i = 0; i < uploadConcurrency; i++) workers.push(uploadWorker());
-        await Promise.all(workers);
+        };
       
-        // now, insert in DB in chunks
-        this.importProgress.message = 'Inserting rows into DB...';
-        const totalRows = rows.length;
-        for (let i = 0; i < totalRows; i += batchSize) {
-          const chunk = rows.slice(i, i + batchSize);
-          // safety: remove any unknown keys that Supabase might not accept or convert Date strings
-          // you can adapt to your table shape. Here we assume keys match column names.
-          const { error } = await this.supabase.from('people').insert(chunk);
-          if (error) {
-            // fallback: try individual inserts (slow) or abort. We'll log and throw to stop.
-            await this.logError('bulkImport', error.message, { chunk });
-            throw error;
-          } else {
-            this.importProgress.rowsInserted += chunk.length;
+        // upload worker with limited concurrency
+        const uploadWorker = async () => {
+          while (photoQueue.length && !this.importProgress.cancelRequested) {
+            const row = photoQueue.shift();
+            const filename = row.photo_filename?.trim();
+            if (!filename) {
+              this.importProgress.photosFailed++;
+              continue;
+            }
+          
+            // see if we actually have the file in selected folder
+            const fileObj = this.findMatchingPhoto(photoMap, filename);
+            if (!fileObj) {
+              // file not provided by admin — skip
+              this.importProgress.photosSkipped++;
+              continue;
+            }
+          
+            try {
+              // check if exists in storage
+              const exists = await fileExistsInStorage(filename);
+              if (exists) {
+                // reuse public url
+                const { data: urlData } = this.supabase.storage.from(bucket).getPublicUrl(filename);
+                row.picture_url = urlData.publicUrl || "";
+                this.importProgress.photosSkipped++;
+              } else {
+                // upload
+                let publicUrl = null
+                let attempts = 0
+                while (!publicUrl && attempts < 3) {
+                  attempts++
+                  publicUrl = await uploadFile(fileObj, filename)
+                }
+                if (publicUrl) {
+                  row.picture_url = publicUrl;
+                  this.importProgress.photosUploaded++;
+                } else {
+                  this.importProgress.photosFailed++;
+                  row.picture_url = "";
+                }
+              }
+            } catch (err) {
+              console.error('photo upload/exists check error', filename, err);
+              this.importProgress.photosFailed++;
+              row.picture_url = "";
+            } finally {
+              // update percent (rough)
+              const donePhotos = this.importProgress.photosUploaded + this.importProgress.photosSkipped + this.importProgress.photosFailed;
+              this.importProgress.percent = Math.round((donePhotos / Math.max(1, this.importProgress.photosTotal)) * 100 * 0.6); // photos weigh 60% of progress
+            }
+          }
+        };
+      
+        try {
+          // spawn concurrent upload workers
+          const workers = [];
+          for (let i = 0; i < uploadConcurrency; i++) workers.push(uploadWorker());
+          await Promise.all(workers);
+        
+          // now, insert in DB in chunks
+          this.importProgress.message = 'Inserting rows into DB...';
+          const totalRows = rows.length;
+          for (let i = 0; i < totalRows; i += batchSize) {
+            const chunk = rows.slice(i, i + batchSize);
+            // safety: remove any unknown keys that Supabase might not accept or convert Date strings
+            // you can adapt to your table shape. Here we assume keys match column names.
+            const { error } = await this.supabase.from('people').insert(chunk);
+            if (error) {
+              // fallback: try individual inserts (slow) or abort. We'll log and throw to stop.
+              await this.logError('bulkImport', error.message, { chunk });
+              throw error;
+            } else {
+              this.importProgress.rowsInserted += chunk.length;
+            }
+          
+            // update percent: photos portion was up to 60%, DB insertion 40%
+            const afterRows = i + chunk.length;
+            const rowsProgress = Math.round((afterRows / totalRows) * 100 * 0.4);
+            this.importProgress.percent = Math.min(100, 60 + rowsProgress);
           }
         
-          // update percent: photos portion was up to 60%, DB insertion 40%
-          const afterRows = i + chunk.length;
-          const rowsProgress = Math.round((afterRows / totalRows) * 100 * 0.4);
-          this.importProgress.percent = Math.min(100, 60 + rowsProgress);
+          // done
+          this.importProgress.percent = 100;
+          this.importProgress.message = `Imported ${this.importProgress.rowsInserted} rows.`;
+          this.showNotification('Import complete', `Imported ${this.importProgress.rowsInserted} rows.`, 'success');
+        
+          // log activity
+          await this.logActivity('bulkImport', `Imported ${this.importProgress.rowsInserted} rows`, null, {
+            rows: this.importProgress.rowsInserted,
+            photosUploaded: this.importProgress.photosUploaded,
+            photosSkipped: this.importProgress.photosSkipped,
+            photosFailed: this.importProgress.photosFailed
+          });
+        
+          // refresh list
+          await this.loadPeople();
+        
+        } catch (err) {
+          console.error('processBulkImport error', err);
+          await this.logError('processBulkImport', err.message || String(err), { rowsCount: rows.length });
+          this.showNotification('Import failed', err.message || 'Unknown error', 'error');
+        } finally {
+          this.importProgress.running = false;
+          // clear if you want
+        }
+      },
+
+      findMatchingPhoto(photoMap, rawName) {
+        if (!rawName) return null;
+
+        let name = rawName.trim();
+        name = name.replace(/^.*[\\/]/, ""); // remove paths
+        const lower = name.toLowerCase();
+
+        const noExt = lower.replace(/\.(jpg|jpeg|png|webp)$/i, "");
+
+        // Try exact match first
+        for (const key of photoMap.keys()) {
+          if (key.toLowerCase() === lower) return photoMap.get(key);
         }
       
-        // done
-        this.importProgress.percent = 100;
-        this.importProgress.message = `Imported ${this.importProgress.rowsInserted} rows.`;
-        this.showNotification('Import complete', `Imported ${this.importProgress.rowsInserted} rows.`, 'success');
+        // Try match without extension
+        for (const key of photoMap.keys()) {
+          const keyLower = key.toLowerCase();
+          const keyNoExt = keyLower.replace(/\.(jpg|jpeg|png|webp)$/i, "");
+          if (keyNoExt === noExt) return photoMap.get(key);
+        }
       
-        // log activity
-        await this.logActivity('bulkImport', `Imported ${this.importProgress.rowsInserted} rows`, null, {
-          rows: this.importProgress.rowsInserted,
-          photosUploaded: this.importProgress.photosUploaded,
-          photosSkipped: this.importProgress.photosSkipped,
-          photosFailed: this.importProgress.photosFailed
-        });
+        // Try starts-with matching (user might upload 001_profile.png)
+        for (const key of photoMap.keys()) {
+          if (key.toLowerCase().startsWith(noExt)) return photoMap.get(key);
+        }
       
-        // refresh list
-        await this.loadPeople();
+        return null; // not found
+      },
+
+      async checkExpirations(allPeople) {
+        for (const p of allPeople) {
+          if (!p.valid_until) continue;
+        
+          const expiry = new Date(p.valid_until);
+          const expText = expiry.toLocaleString("en-US", { month: "long", year: "numeric" });
+        
+          // Permanent message
+          const message = `Membership valid until ${expText}.`;
+        
+          // Check if notification already exists for this person
+          const { data: existing } = await this.supabase
+            .from("notification_logs")
+            .select("id")
+            .eq("person_id", p.id)
+            .maybeSingle();
+        
+          // If exists → do NOT delete, do NOT create again
+          if (existing) continue;
+        
+          // Create only once (permanent)
+          await this.supabase.from("notification_logs").insert([
+            {
+              person_id: p.id,
+              message,
+              created_at: new Date()
+            }
+          ]);
+        }
+      },
+
+      async updateNotificationForPerson(personId) {
+        // Load fresh data
+        const { data: p } = await this.supabase
+          .from("people")
+          .select("*")
+          .eq("id", personId)
+          .single();
       
-      } catch (err) {
-        console.error('processBulkImport error', err);
-        await this.logError('processBulkImport', err.message || String(err), { rowsCount: rows.length });
-        this.showNotification('Import failed', err.message || 'Unknown error', 'error');
-      } finally {
-        this.importProgress.running = false;
-        // clear if you want
-      }
-    },
-    findMatchingPhoto(photoMap, rawName) {
-      if (!rawName) return null;
-          
-      let name = rawName.trim();
-      name = name.replace(/^.*[\\/]/, ""); // remove paths
-      const lower = name.toLowerCase();
-          
-      const noExt = lower.replace(/\.(jpg|jpeg|png|webp)$/i, "");
-          
-      // Try exact match first
-      for (const key of photoMap.keys()) {
-        if (key.toLowerCase() === lower) return photoMap.get(key);
-      }
-    
-      // Try match without extension
-      for (const key of photoMap.keys()) {
-        const keyLower = key.toLowerCase();
-        const keyNoExt = keyLower.replace(/\.(jpg|jpeg|png|webp)$/i, "");
-        if (keyNoExt === noExt) return photoMap.get(key);
-      }
-    
-      // Try starts-with matching (user might upload 001_profile.png)
-      for (const key of photoMap.keys()) {
-        if (key.toLowerCase().startsWith(noExt)) return photoMap.get(key);
-      }
-    
-      return null; // not found
-    },
-    async checkExpirations(allPeople) {
-      for (const p of allPeople) {
-        if (!p.valid_until) continue;
+        if (!p || !p.valid_until) return;
       
         const expiry = new Date(p.valid_until);
-        const expText = expiry.toLocaleString("en-US", { month: "long", year: "numeric" });
+        const expText = expiry.toLocaleString("en-US", {
+          month: "long",
+          year: "numeric",
+        });
       
-        // Permanent message
         const message = `Membership valid until ${expText}.`;
       
-        // Check if notification already exists for this person
+        // Check if notification already exists
         const { data: existing } = await this.supabase
           .from("notification_logs")
-          .select("id")
-          .eq("person_id", p.id)
+          .select("*")
+          .eq("person_id", personId)
           .maybeSingle();
       
-        // If exists → do NOT delete, do NOT create again
-        if (existing) continue;
-      
-        // Create only once (permanent)
-        await this.supabase.from("notification_logs").insert([
-          {
-            person_id: p.id,
-            message,
-            created_at: new Date()
-          }
-        ]);
-      }
-    },
+        if (!existing) {
+          // Create permanent notification if missing
+          await this.supabase.from("notification_logs").insert([
+            {
+              person_id: personId,
+              message,
+              created_at: new Date(),
+            },
+          ]);
+        } else {
+          // Only update message (KEEP notification forever)
+          await this.supabase
+            .from("notification_logs")
+            .update({ message })
+            .eq("id", existing.id);
+        }
+      },
 
-    async updateNotificationForPerson(personId) {
-      // Load fresh data
-      const { data: p } = await this.supabase
-        .from("people")
-        .select("*")
-        .eq("id", personId)
-        .single();
-    
-      if (!p || !p.valid_until) return;
-    
-      const expiry = new Date(p.valid_until);
-      const expText = expiry.toLocaleString("en-US", {
-        month: "long",
-        year: "numeric",
-      });
-    
-      const message = `Membership valid until ${expText}.`;
-    
-      // Check if notification already exists
-      const { data: existing } = await this.supabase
-        .from("notification_logs")
-        .select("*")
-        .eq("person_id", personId)
-        .maybeSingle();
-    
-      if (!existing) {
-        // Create permanent notification if missing
-        await this.supabase.from("notification_logs").insert([
+      async refreshNotifications() {
+        const { data } = await this.supabase
+          .from("notification_logs")
+          .select("*")
+          .order("created_at", { ascending: false });
+      
+        this.newNotifications = data || [];
+      },
+
+      normalizeValidUntil(value) {
+        if (!value) return null;
+      
+        // Try direct parsing first
+        let date = new Date(value);
+      
+        // If invalid date, assume value is "Month YYYY"
+        if (isNaN(date.getTime())) {
+          try {
+            const parts = value.split(" ");
+            const monthName = parts[0];
+            const year = parts[1];
+          
+            const monthIndex = new Date(`${monthName} 1, ${year}`).getMonth();
+            date = new Date(year, monthIndex, 1); 
+          } catch (e) {
+            return null;
+          }
+        }
+      
+        return date.toISOString().split("T")[0]; // Return YYYY-MM-DD
+      },
+
+      openNotifications() {
+        this.refreshNotifications();
+        this.showNotificationModal = true;
+      },
+
+      getPersonName(id) {
+        const p = this.people.find(x => x.id === id);
+        if (!p) return "Unknown";
+      
+        const mi = p.middle_initial ? p.middle_initial + ". " : "";
+        const suffix = p.suffix ? " " + p.suffix : "";
+      
+        return `${p.first_name} ${mi}${p.last_name}${suffix}`;
+      },
+
+      getPersonWorkID(id) {
+        const p = this.people.find(x => x.id === id);
+        return p ? p.work_id : "—";
+      },
+
+      getRowColor(personId) {
+        const p = this.people.find(x => x.id === personId);
+        if (!p || !p.valid_until) return "";
+      
+        const now = new Date();
+        const expiry = new Date(p.valid_until);
+      
+        // Month difference
+        const diffMonths =
+          (expiry.getFullYear() - now.getFullYear()) * 12 +
+          (expiry.getMonth() - now.getMonth());
+      
+        if (diffMonths < 0) return "bg-red-600";     // expired
+        if (diffMonths === 0) return "bg-red-600";     // expired
+        if (diffMonths <= 2) return "bg-yellow-500"; // expiring soon
+        return "bg-green-600";                       // valid
+      },
+
+      async hasSeenNotificationThisMonth(personId) {
+        const now = new Date();
+        const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      
+        const { data } = await this.supabase
+          .from("notification_tracker")
+          .select("id")
+          .eq("person_id", personId)
+          .eq("month_key", monthKey)
+          .maybeSingle();
+      
+        return !!data;
+      },
+
+      async markNotificationShown(personId) {
+        const now = new Date();
+        const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      
+        await this.supabase.from("notification_tracker").insert([
           {
             person_id: personId,
-            message,
-            created_at: new Date(),
-          },
+            month_key: monthKey,
+          }
         ]);
-      } else {
-        // Only update message (KEEP notification forever)
-        await this.supabase
-          .from("notification_logs")
-          .update({ message })
-          .eq("id", existing.id);
-      }
-    },
+      },
 
-    async refreshNotifications() {
-      const { data } = await this.supabase
-        .from("notification_logs")
-        .select("*")
-        .order("created_at", { ascending: false });
-    
-      this.newNotifications = data || [];
-    },
-    normalizeValidUntil(value) {
-      if (!value) return null;
-    
-      // Try direct parsing first
-      let date = new Date(value);
-    
-      // If invalid date, assume value is "Month YYYY"
-      if (isNaN(date.getTime())) {
-        try {
-          const parts = value.split(" ");
-          const monthName = parts[0];
-          const year = parts[1];
-        
-          const monthIndex = new Date(`${monthName} 1, ${year}`).getMonth();
-          date = new Date(year, monthIndex, 1); 
-        } catch (e) {
-          return null;
-        }
-      }
-    
-      return date.toISOString().split("T")[0]; // Return YYYY-MM-DD
-    },
-    openNotifications() {
-      this.refreshNotifications();
-      this.showNotificationModal = true;
-    },
-    getPersonName(id) {
-      const p = this.people.find(x => x.id === id);
-      if (!p) return "Unknown";
-    
-      const mi = p.middle_initial ? p.middle_initial + ". " : "";
-      const suffix = p.suffix ? " " + p.suffix : "";
-    
-      return `${p.first_name} ${mi}${p.last_name}${suffix}`;
-    },
-
-    getPersonWorkID(id) {
-      const p = this.people.find(x => x.id === id);
-      return p ? p.work_id : "—";
-    },
-    getRowColor(personId) {
-      const p = this.people.find(x => x.id === personId);
-      if (!p || !p.valid_until) return "";
-    
-      const now = new Date();
-      const expiry = new Date(p.valid_until);
-    
-      // Month difference
-      const diffMonths =
-        (expiry.getFullYear() - now.getFullYear()) * 12 +
-        (expiry.getMonth() - now.getMonth());
-    
-      if (diffMonths < 0) return "bg-red-600";     // expired
-      if (diffMonths === 0) return "bg-red-600";     // expired
-      if (diffMonths <= 2) return "bg-yellow-500"; // expiring soon
-      return "bg-green-600";                       // valid
-    },
-    async hasSeenNotificationThisMonth(personId) {
-      const now = new Date();
-      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    
-      const { data } = await this.supabase
-        .from("notification_tracker")
-        .select("id")
-        .eq("person_id", personId)
-        .eq("month_key", monthKey)
-        .maybeSingle();
-    
-      return !!data;
-    },
-    async markNotificationShown(personId) {
-      const now = new Date();
-      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    
-      await this.supabase.from("notification_tracker").insert([
-        {
-          person_id: personId,
-          month_key: monthKey,
-        }
-      ]);
-    },
-    async checkMonthlyNotifications() {
-      const critical = this.newNotifications.filter(log => {
-        const color = this.getRowColor(log.person_id);
-        return color.includes("red") || color.includes("yellow");
-      });
-    
-      const showList = [];
-    
-      for (const log of critical) {
-        const alreadySeen = await this.hasSeenNotificationThisMonth(log.person_id);
+      async checkMonthlyNotifications() {
+        const critical = this.newNotifications.filter(log => {
+          const color = this.getRowColor(log.person_id);
+          return color.includes("red") || color.includes("yellow");
+        });
       
-        if (!alreadySeen) {
-          showList.push(log);
-          await this.markNotificationShown(log.person_id);
+        const showList = [];
+      
+        for (const log of critical) {
+          const alreadySeen = await this.hasSeenNotificationThisMonth(log.person_id);
+        
+          if (!alreadySeen) {
+            showList.push(log);
+            await this.markNotificationShown(log.person_id);
+          }
         }
-      }
-    
-      // Only show modal if there are notifications for this month
-      if (showList.length > 0) {
-        this.newNotifications = showList;
-        this.showNotificationModal = true;
-      }
-    },
-    openPersonCard(person) {
-      this.cardPerson = person;
-      this.showCardModal = true;
-    },
-    toggleSelect(person) {
-      const index = this.selectedRows.indexOf(person)
-        if (index === -1) {
-        this.selectedRows.push(person)
-      } else {
-        this.selectedRows.splice(index, 1)
-      }
-    },
-    formatTableName(p) {
-      if (!p) return "";
+      
+        // Only show modal if there are notifications for this month
+        if (showList.length > 0) {
+          this.newNotifications = showList;
+          this.showNotificationModal = true;
+        }
+      },
 
-      const mi = p.middle_initial ? p.middle_initial + ". " : "";
-      const suffix = p.suffix ? " " + p.suffix : "";
+      openPersonCard(person) {
+        this.cardPerson = person;
+        this.showCardModal = true;
+      },
 
-      return `${p.last_name}, ${p.first_name} ${mi}${suffix}`.trim();
-    }
-  },
-  computed: {
-  asyncCriticalNotifications() {
-    return this.newNotifications.filter(log => {
-      const color = this.getRowColor(log.person_id);
-      return color.includes("red") || color.includes("yellow");
-    });
-  }
+      toggleSelect(person) {
+        const index = this.selectedRows.indexOf(person)
+          if (index === -1) {
+          this.selectedRows.push(person)
+        } else {
+          this.selectedRows.splice(index, 1)
+        }
+      },
+
+      formatTableName(p) {
+        if (!p) return "";
+
+        const mi = p.middle_initial ? p.middle_initial + ". " : "";
+        const suffix = p.suffix ? " " + p.suffix : "";
+
+        return `${p.last_name}, ${p.first_name} ${mi}${suffix}`.trim();
+      },
+
+    async logAdminLogout() {
+      try {
+        const { data } = await this.supabase.auth.getSession()
+        const user = data?.session?.user
+        if (!user) return
+      
+        await this.supabase.from("activity_logs").insert([{
+          action: "adminLogout",
+          description: "Admin logged out",
+          person_id: null,        // ✅ IMPORTANT
+          admin_id: user.id,
+          metadata: {
+            email: user.email
+          },
+            created_at: new Date().toISOString()
+          }])
+        } catch (err) {
+          console.warn("Logout log skipped:", err)
+        }
+      }   
+
+      },
+      computed: {
+      asyncCriticalNotifications() {
+        return this.newNotifications.filter(log => {
+          const color = this.getRowColor(log.person_id);
+          return color.includes("red") || color.includes("yellow");
+        });
+      }
 }
 
   
@@ -1636,27 +1686,27 @@ async mounted() {
 <style scoped>
 .btn-primary {
   @apply px-4 py-2 rounded-lg bg-blue-600 text-white font-medium shadow-sm
-         hover:bg-blue-700 transition active:scale-[.97];
+        hover:bg-blue-700 transition active:scale-[.97];
 }
 
 .btn-green {
   @apply px-4 py-2 rounded-lg bg-green-600 text-white font-medium shadow-sm
-         hover:bg-green-700 transition active:scale-[.97];
+        hover:bg-green-700 transition active:scale-[.97];
 }
 
 .btn-yellow {
   @apply px-4 py-2 rounded-lg bg-yellow-500 text-white font-medium shadow-sm
-         hover:bg-yellow-600 transition active:scale-[.97];
+        hover:bg-yellow-600 transition active:scale-[.97];
 }
 
 .btn-purple {
   @apply px-4 py-2 rounded-lg bg-purple-600 text-white font-medium shadow-sm
-         hover:bg-purple-700 transition active:scale-[.97];
+        hover:bg-purple-700 transition active:scale-[.97];
 }
 
 .btn-red {
   @apply px-4 py-2 rounded-lg bg-red-600 text-white font-medium shadow-sm
-         hover:bg-red-700 transition active:scale-[.97];
+        hover:bg-red-700 transition active:scale-[.97];
 }
 
 .btn-disabled {
