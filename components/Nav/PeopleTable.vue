@@ -28,22 +28,40 @@
         </div>
       </div>
 
-      <!-- LEGEND -->
-      <div class="flex flex-wrap items-center gap-4 text-sm text-gray-700">
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-green-600"></span>
-          <span>Valid</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-yellow-600"></span>
-          <span>Expiring Soon</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-red-600"></span>
-          <span>Expired</span>
-        </div>
+      <!-- STATUS FILTER -->
+      <div class="flex gap-2 flex-wrap">
+        <button
+          class="px-3 py-1 rounded-full text-sm border"
+          :class="statusFilter === '' ? 'bg-gray-100 text-gray-500' : ''"
+          @click="statusFilter = ''"
+        >
+          All
+        </button>
+      
+        <button
+          class="px-3 py-1 rounded-full text-sm border bg-green-300 text-green-800"
+          :class="statusFilter === 'valid' ? 'ring-2 ring-green-400' : ''"
+          @click="statusFilter = 'valid'"
+        >
+          Active
+        </button>
+      
+        <button
+          class="px-3 py-1 rounded-full text-sm border bg-yellow-300 text-yellow-800"
+          :class="statusFilter === 'expiring' ? 'ring-2 ring-yellow-400' : ''"
+          @click="statusFilter = 'expiring'"
+        >
+          Expiring Soon
+        </button>
+      
+        <button
+          class="px-3 py-1 rounded-full text-sm border bg-red-300 text-red-800"
+          :class="statusFilter === 'expired' ? 'ring-2 ring-red-400' : ''"
+          @click="statusFilter = 'expired'"
+        >
+          Expired
+        </button>
       </div>
-
     </div>
 
     <!-- SEARCH + FILTERS -->
@@ -73,17 +91,29 @@
       <select
         v-model="filterRegion"
         class="border rounded-full px-4 py-2 text-sm w-full md:w-44
-               focus:outline-none focus:ring-2 focus:ring-blue-400"
+               focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
       >
         <option value="">All Regions</option>
         <option v-for="r in regions" :key="r" :value="r">{{ r }}</option>
       </select>
 
+      <!-- CHAPTER ✅ -->
+  <select
+    v-model="filterChapter"
+    class="border rounded-full px-4 py-2 text-sm w-full md:w-44
+           focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
+  >
+    <option value="">All Chapters</option>
+    <option v-for="c in chapterList" :key="c" :value="c">
+      {{ c }}
+    </option>
+  </select>
+
       <!-- DESIGNATION -->
       <select
         v-model="filterDesignation"
         class="border rounded-full px-4 py-2 text-sm w-full md:w-40
-               focus:outline-none focus:ring-2 focus:ring-blue-400"
+               focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
       >
         <option value="">Designation</option>
         <option v-for="t in designationList" :key="t" :value="t">
@@ -239,11 +269,14 @@ export default {
       people: [],
       search: "",
       filterRegion: "",
+      filterChapter: "", 
       filterDesignation: "",
       regions: [],
       designationList: [],
+      chapterList: [], 
       currentPage: 1,
       pageSize: 10,
+      statusFilter: ""
     };
   },
 
@@ -255,31 +288,44 @@ export default {
 
 
   computed: {
-    filteredPeople() {
-      const s = this.search.toLowerCase();
+filteredPeople() {
+  const s = this.search.toLowerCase();
 
-      return this.people.filter((p) => {
-        const matchesSearch = [
-          this.formatFullName(p),
-          p.work_id,
-          p.chapter,
-          p.region,
-          p.designation,
-        ]
-          .filter(Boolean)
-          .some((field) => (field || "").toLowerCase().includes(s));
+  return this.people.filter((p) => {
+    const matchesSearch = [
+      this.formatFullName(p),
+      p.work_id,
+      p.chapter,
+      p.region,
+      p.designation,
+    ]
+      .filter(Boolean)
+      .some((field) => (field || "").toLowerCase().includes(s));
 
-        const matchesRegion = this.filterRegion
-          ? p.region === this.filterRegion
-          : true;
+    const matchesRegion =
+      !this.filterRegion || p.region === this.filterRegion;
 
-        const matchesDesignation = this.filterDesignation
-          ? p.designation === this.filterDesignation
-          : true;
+    const matchesDesignation =
+      !this.filterDesignation || p.designation === this.filterDesignation;
 
-        return matchesSearch && matchesRegion && matchesDesignation;
-      });
-    },
+    const matchesChapter =
+      !this.filterChapter || p.chapter === this.filterChapter;
+
+    const status = this.getStatus(p.valid_until);
+    const matchesStatus =
+      !this.statusFilter || status === this.statusFilter;
+
+    return (
+      matchesSearch &&
+      matchesRegion &&
+      matchesDesignation &&
+      matchesChapter &&
+      matchesStatus
+    );
+  });
+},
+
+
 
     paginatedPeople() {
       const start = (this.currentPage - 1) * this.pageSize;
@@ -301,6 +347,12 @@ export default {
     filterDesignation() {
       this.currentPage = 1;
     },
+      filterChapter() {        
+    this.currentPage = 1;
+    },
+    statusFilter() {     
+    this.currentPage = 1;
+    },
   },
 
   methods: {
@@ -312,12 +364,15 @@ export default {
     async loadPeople() {
       const { data } = await this.supabase.from("people").select("*");
 
-      console.log("LOADED PEOPLE:", data);  // <-- ADD THIS
-
       if (data) {
         this.people = data;
+
         this.regions = [...new Set(data.map((p) => p.region))].filter(Boolean);
         this.designationList = [...new Set(data.map((p) => p.designation))].filter(Boolean);
+
+        this.chapterList = [...new Set(data.map(p => p.chapter))]
+          .filter(Boolean)
+          .sort();
       }
     },
     nextPage() {
@@ -374,6 +429,21 @@ export default {
       const d = new Date(date);
       return d.toLocaleString("en-US", { month: "long", year: "numeric" });
     },
+    getStatus(validUntil) {
+  if (!validUntil) return "unknown";
+
+  const now = new Date();
+  const expiry = new Date(validUntil);
+
+  const diffMonths =
+    (expiry.getFullYear() - now.getFullYear()) * 12 +
+    (expiry.getMonth() - now.getMonth());
+
+  if (diffMonths < 0 || diffMonths === 0) return "expired";
+  if (diffMonths <= 2) return "expiring";
+  return "valid";
+},
+
   },
 };
 </script>

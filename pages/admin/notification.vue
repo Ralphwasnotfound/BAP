@@ -13,30 +13,51 @@
 
         <!-- STATUS LEGEND -->
         <div class="flex flex-wrap items-center gap-4">
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-green-600"></span>
-            <span class="text-sm text-gray-700">Valid</span>
+          <div class="flex gap-2 flex-wrap">
+            <button
+              class="px-3 py-1 rounded-full text-sm border"
+              :class="statusFilter === '' ? 'bg-gray-200' : ''"
+              @click="statusFilter = ''"
+            >
+              All
+            </button>
+          
+            <button
+              class="px-3 py-1 rounded-full text-sm border bg-green-300 text-green-700"
+              :class="statusFilter === 'valid' ? 'ring-2 ring-green-400' : ''"
+              @click="statusFilter = 'valid'"
+            >
+              Active
+            </button>
+          
+            <button
+              class="px-3 py-1 rounded-full text-sm border bg-yellow-300 text-yellow-800"
+              :class="statusFilter === 'expiring' ? 'ring-2 ring-yellow-400' : ''"
+              @click="statusFilter = 'expiring'"
+            >
+              Expiring Soon
+            </button>
+          
+            <button
+              class="px-3 py-1 rounded-full text-sm border bg-red-300 text-red-800"
+              :class="statusFilter === 'expired' ? 'ring-2 ring-red-400' : ''"
+              @click="statusFilter = 'expired'"
+            >
+              Expired
+            </button>
           </div>
-
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
-            <span class="text-sm text-gray-700">Expiring Soon</span>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-red-600"></span>
-            <span class="text-sm text-gray-700">Expired</span>
-          </div>
-
           <!-- TOTAL RESULTS -->
           <div
-            v-if="notifSearch.trim() && filteredNotifications.length > 0"
+            v-if="(notifSearch.trim() || statusFilter) && filteredNotifications.length > 0"
             class="px-3 py-1 bg-gray-100 border rounded-full text-sm text-gray-500"
           >
             <span class="font-semibold">{{ filteredNotifications.length }}</span>
             {{ filteredNotifications.length === 1 ? 'Item' : 'Items' }}
           </div>
         </div>
+
+
+
 
         <!-- SEARCH -->
         <div class="relative w-full md:w-64">
@@ -174,8 +195,8 @@ export default {
       logs: [],
       peopleIndex: {},
       notifSearch: "",
+      statusFilter: "",
 
-      // 🔥 LOADING STATE
       loading: false,
       loadingMessage: "Loading...",
     };
@@ -190,21 +211,6 @@ export default {
   },
 
   computed: {
-    filteredNotifications() {
-      if (!this.notifSearch.trim()) return this.logs;
-
-      const s = this.notifSearch.toLowerCase();
-      return this.logs.filter((log) => {
-        const p = this.peopleIndex[log.person_id];
-        if (!p) return false;
-
-        const full =
-          `${p.first_name} ${p.middle_initial || ""} ${p.last_name}`.toLowerCase();
-
-        return full.includes(s) || (p.work_id || "").toLowerCase().includes(s);
-      });
-    },
-
     paginatedNotifications() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       return this.filteredNotifications.slice(start, start + this.itemsPerPage);
@@ -212,7 +218,31 @@ export default {
 
     totalPages() {
       return Math.ceil(this.filteredNotifications.length / this.itemsPerPage) || 1;
-    }
+    },
+    filteredNotifications() {
+  const s = this.notifSearch.toLowerCase();
+
+  return this.logs.filter((log) => {
+    const p = this.peopleIndex[log.person_id];
+    if (!p) return false;
+
+    // 🔍 Search filter
+    const matchesSearch =
+      !s ||
+      `${p.first_name} ${p.middle_initial || ""} ${p.last_name}`
+        .toLowerCase()
+        .includes(s) ||
+      (p.work_id || "").toLowerCase().includes(s);
+
+    // 🚦 Status filter
+    const status = this.getStatus(log.person_id);
+    const matchesStatus =
+      !this.statusFilter || status === this.statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+},
+
   },
 
   methods: {
@@ -348,7 +378,23 @@ export default {
   } catch (err) {
     console.warn("Logout log skipped:", err)
   }
-}
+},
+getStatus(personId) {
+  const p = this.peopleIndex[personId];
+  if (!p || !p.valid_until) return "unknown";
+
+  const now = new Date();
+  const expiry = new Date(p.valid_until);
+
+  const diffMonths =
+    (expiry.getFullYear() - now.getFullYear()) * 12 +
+    (expiry.getMonth() - now.getMonth());
+
+  if (diffMonths < 0 || diffMonths === 0) return "expired";
+  if (diffMonths <= 2) return "expiring";
+  return "valid";
+},
+
 
 
   },

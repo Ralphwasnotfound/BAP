@@ -92,60 +92,103 @@
       </div>
 
 
-      <!-- SEARCH -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="relative mb-4">
-          <input
-            v-model="searchQuery"
-            @input="handleSearch"
-            type="text"
-            placeholder="Search people..."
-            class="border px-4 py-2 rounded-full w-full md:w-64 pr-10"  
-          />
-
-          <!-- ICON INSIDE INPUT -->
-          <svg 
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24" 
-            width="18" 
-            height="18"
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            fill="rgba(173,184,194,1)"
-          >
-            <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168ZM16.0247 15.8748C17.2475 14.6146 18 12.8956 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18C12.8956 18 14.6146 17.2475 15.8748 16.0247L16.0247 15.8748Z"/>
-          </svg>
-        </div>
-        <!-- SHOW ONLY WHEN SEARCHING AND RESULTS > 0 -->
-        <div
-            v-if="searchQuery.trim() && people.length > 0"
-            class="px-3 py-1 bg-gray-100 border rounded-full text-sm text-gray-400 mt-2"
-          >
-            <span class="font-semibold">{{ people.length }}</span>
-            {{ people.length === 1 ? 'Item' : 'Items' }}
-        </div>
-
-      <!-- Bulk Delete -->
-        <div class="flex flex-row gap-2 items-center ">
-          <button
-            v-if="bulkMode && selectedRows.length > 0"
-            class="btn-red flex items-center gap-2 w-full sm:w-auto"
-            :disabled="selectedRows.length === 0"
-            @click="openBulkDeleteModal"
-          >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path></svg>
-            Delete Selected ({{ selectedRows.length }})
-          </button>
+      <div class="flex flex-col gap-4 py-4">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full lg:w-auto">
+            <div class="relative w-full sm:w-64">
+              <input
+                v-model="searchQuery"
+                @input="handleSearch"
+                type="text"
+                placeholder="Search people..."
+                class="border px-4 py-2 rounded-full w-full pr-10"
+              />
+            
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                fill="rgba(173,184,194,1)"
+              >
+                <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168Z"/>
+              </svg>
+            </div>
+          
+            <div
+              v-if="searchQuery.trim() && people.length > 0"
+              class="px-3 py-1 bg-gray-100 border rounded-full text-sm text-gray-400"
+            >
+              <span class="font-semibold">{{ people.length }}</span>
+              {{ people.length === 1 ? 'Item' : 'Items' }}
+            </div>
+          </div>
         
-          <button 
-            v-if="bulkMode"
-            class="px-4 py-2 bg-gray-500 text-white flex items-center gap-2 rounded"
-            @click="cancelBulkMode"
-          >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="rgba(255,255,255,1)"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM12 10.5858L14.8284 7.75736L16.2426 9.17157L13.4142 12L16.2426 14.8284L14.8284 16.2426L12 13.4142L9.17157 16.2426L7.75736 14.8284L10.5858 12L7.75736 9.17157L9.17157 7.75736L12 10.5858Z"></path></svg>
-            Cancel
-          </button>
+          <!-- RIGHT: FILTERS + BULK -->
+          <div class="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
+          
+            <!-- FILTERS -->
+            <select
+              v-model="selectedRegion"
+              class="border px-3 py-2 rounded-full text-sm text-gray-500"
+            >
+              <option value="">All Regions</option>
+              <option v-for="r in regions" :key="r" :value="r">
+                {{ r }}
+              </option>
+            </select>
+          
+            <select
+              v-model="selectedChapter"
+              class="border px-3 py-2 rounded-full text-sm text-gray-500"
+            >
+              <option value="">All Chapters</option>
+              <option v-for="c in chapters" :key="c" :value="c">
+                {{ c }}
+              </option>
+            </select>
+
+            <select
+              v-model="selectedDesignation"
+              class="border px-3 py-2 rounded-full text-sm text-gray-500"
+            >           
+              <option value="">All Designations</option>
+              <option v-for="d in designations" :key="d" :value="d">
+                {{ d }}
+              </option>
+            </select>
+
+          
+            <button
+              v-if="selectedRegion || selectedChapter"
+              @click="selectedRegion=''; selectedChapter=''"
+              class="px-3 py-2 text-sm rounded-full bg-gray-200 hover:bg-gray-300"
+            >
+              Clear
+            </button>
+          
+            <!-- BULK ACTIONS -->
+            <button
+              v-if="bulkMode && selectedRows.length > 0"
+              class="btn-red flex items-center gap-2"
+              @click="openBulkDeleteModal"
+            >
+              Delete Selected ({{ selectedRows.length }})
+            </button>
+          
+            <button
+              v-if="bulkMode"
+              class="px-4 py-2 bg-gray-500 text-white flex items-center gap-2 rounded"
+              @click="cancelBulkMode"
+            >
+              Cancel
+            </button>
+          
+          </div>
         </div>
       </div>
+
 
       <!-- TABLE -->
       <div class="relative overflow-x-auto bg-white shadow rounded-lg border">
@@ -200,7 +243,7 @@
           <tbody :key="currentPage">
             <transition-group name="tableFade" as="template" >
             <tr 
-              v-for="p in people" 
+              v-for="p in filteredPeople" 
               :key="p.id"
               @click="openPersonCard(p)"
               class="cursor-pointer hover:bg-gray-50 text-xs font-medium"
@@ -521,7 +564,11 @@ export default {
 
       // People data & pagination
       people: [],
+      allPeople: [],
       searchQuery: "",
+      selectedRegion: "",
+      selectedChapter: "",
+      selectedDesignation: "",
       currentPage: 1,
       totalPages: 1,
       pageSize: 10,
@@ -1676,11 +1723,54 @@ export default {
           const color = this.getRowColor(log.person_id);
           return color.includes("red") || color.includes("yellow");
         });
-      }
-}
+      },
+      regions() {
+        return [...new Set(
+          (this.people || []).map(p => p.region).filter(Boolean)
+        )].sort()
+      },
 
-  
-}
+      chapters() {
+        return [...new Set(
+          (this.people || []).map(p => p.chapter).filter(Boolean)
+        )].sort()
+      },
+
+      designations() {
+        return [...new Set(
+          (this.allPeople || []).map(p => p.designation).filter(Boolean)
+        )].sort()
+      },
+
+      filteredPeople() {
+        return this.people.filter(p => {
+          const q = this.searchQuery.toLowerCase()
+        
+          const matchesSearch =
+            !q ||
+            this.formatFullName(p).toLowerCase().includes(q) ||
+            p.work_id?.toLowerCase().includes(q)
+        
+          const matchesRegion =
+            !this.selectedRegion || p.region === this.selectedRegion
+        
+          const matchesDesignation =
+            !this.selectedDesignation || p.designation === this.selectedDesignation
+        
+          const matchesChapter =
+            !this.selectedChapter || p.chapter === this.selectedChapter
+        
+          // INCLUDE ALL CONDITIONS
+          return (
+            matchesSearch &&
+            matchesRegion &&
+            matchesDesignation &&
+            matchesChapter
+          )
+        })
+      }
+    }
+  }
 </script>
 
 <style scoped>
