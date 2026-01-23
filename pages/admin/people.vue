@@ -1365,7 +1365,7 @@ export default {
               if (exists) {
                 // reuse public url
                 const { data: urlData } = this.supabase.storage.from(bucket).getPublicUrl(filename);
-                row.picture_url = urlData.publicUrl || "";
+                row.picture_url = urlData.publicUrl || null;
                 this.importProgress.photosSkipped++;
               } else {
                 // upload
@@ -1394,6 +1394,16 @@ export default {
             }
           }
         };
+
+        const normalizeRow = (row) => {
+              const cleaned = { ...row };
+              Object.keys(cleaned).forEach(key => {
+                if (cleaned[key] === undefined || cleaned[key] === "") {
+                  cleaned[key] = null;
+                }
+              });
+              return cleaned;
+            };
       
         try {
           // spawn concurrent upload workers
@@ -1406,22 +1416,26 @@ export default {
           const totalRows = rows.length;
           for (let i = 0; i < totalRows; i += batchSize) {
             const chunk = rows.slice(i, i + batchSize);
-            // safety: remove any unknown keys that Supabase might not accept or convert Date strings
-            // you can adapt to your table shape. Here we assume keys match column names.
-            const { error } = await this.supabase.from('people').insert(chunk);
+
+            // 🔑 NORMALIZE OPTIONAL FIELDS
+            const normalizedChunk = chunk.map(normalizeRow)
+          
+            const { error } = await this.supabase
+              .from('people')
+              .insert(normalizedChunk);
+          
             if (error) {
-              // fallback: try individual inserts (slow) or abort. We'll log and throw to stop.
-              await this.logError('bulkImport', error.message, { chunk });
+              await this.logError('bulkImport', error.message, { chunk: normalizedChunk });
               throw error;
             } else {
-              this.importProgress.rowsInserted += chunk.length;
+              this.importProgress.rowsInserted += normalizedChunk.length;
             }
-          
-            // update percent: photos portion was up to 60%, DB insertion 40%
-            const afterRows = i + chunk.length;
+
+            const afterRows = i + normalizedChunk.length;
             const rowsProgress = Math.round((afterRows / totalRows) * 100 * 0.4);
             this.importProgress.percent = Math.min(100, 60 + rowsProgress);
           }
+
         
           // done
           this.importProgress.percent = 100;
