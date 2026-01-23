@@ -381,69 +381,68 @@ export default {
       });
     },
 
-splitFullName(name) {
-  const parts = name.trim().split(/\s+/);
-  const suffixList = ["Jr", "Jr.", "Sr", "Sr.", "III", "IV"];
-
-  let suffix = "";
-  if (suffixList.includes(parts[parts.length - 1])) {
-    suffix = parts.pop();
-  }
-
-  const first = parts.shift() || "";
-  const last = parts.pop() || "";
-  const mi = parts.join(" ");
-
-  return {
-    first_name: first,
-    middle_initial: mi,
-    last_name: last,
-    suffix,
-  };
-},
-
-
-buildFinalData() {
-  const out = [];
-
-  for (const row of this.parsedCSV) {
-    const obj = {};
-    let usedFullName = false;
-
-    // ONLY loop real CSV headers
-    for (const col of Object.keys(row)) {
-      const field = this.columnMapping[col];
-      if (!field) continue;
-
-      if (field === "full_name" && this.autoSplitName) {
-        Object.assign(obj, this.splitFullName(row[col]));
-        usedFullName = true;
-        continue;
+    splitFullName(name) {
+      const parts = name.trim().split(/\s+/);
+      const suffixList = ["Jr", "Jr.", "Sr", "Sr.", "III", "IV"];
+    
+      let suffix = "";
+      if (suffixList.includes(parts[parts.length - 1])) {
+        suffix = parts.pop();
       }
+    
+      const first = parts.shift() || "";
+      const last = parts.pop() || "";
+      const mi = parts.join(" ");
+    
+      return {
+        first_name: first,
+        middle_initial: mi,
+        last_name: last,
+        suffix,
+      };
+    },
 
-      if (obj.suffix && /^[A-Z]$/i.test(obj.suffix)) {
-  obj.middle_initial = obj.suffix;
-  obj.suffix = "";
-}
-
-      obj[field] = row[col];
+    buildFinalData() {
+      const out = [];
+    
+      for (const row of this.parsedCSV) {
+        const obj = {};
+        let usedFullName = false;
+      
+        // ONLY loop real CSV headers
+        for (const col of Object.keys(row)) {
+          const field = this.columnMapping[col];
+          if (!field) continue;
+        
+          if (field === "full_name" && this.autoSplitName) {
+            Object.assign(obj, this.splitFullName(row[col]));
+            usedFullName = true;
+            continue;
+          }
+        
+          if (obj.suffix && /^[A-Z]$/i.test(obj.suffix)) {
+      obj.middle_initial = obj.suffix;
+      obj.suffix = "";
     }
 
-    // ✅ ENSURE fields exist (but DO NOT overwrite)
-    if (!usedFullName) {
-      obj.middle_initial = obj.middle_initial ?? "";
-      obj.suffix = obj.suffix ?? "";
-    }
-
-    // Normalize region
-    obj.region = this.normalizeRegion(obj.region);
-
-    obj.created_at = new Date().toISOString();
-    out.push(obj);
-  }
-
-  return out;
-},
+          obj[field] = row[col];
+        }
+      
+        // ✅ ENSURE fields exist (but DO NOT overwrite)
+        if (!usedFullName) {
+          obj.middle_initial = obj.middle_initial ?? "";
+          obj.suffix = obj.suffix ?? "";
+        }
+      
+        // Normalize region
+        obj.region = this.normalizeRegion(obj.region);
+      
+        obj.created_at = new Date().toISOString();
+        out.push(obj);
+      }
+    
+      return out;
+    },
 
     goToSimulation() {
       this.simulatedData = this.buildFinalData();
@@ -460,9 +459,6 @@ buildFinalData() {
       this.simulatedData.forEach((row, index) => {
         const i = index + 1;
       
-        // =========================
-        // REQUIRED CORE FIELDS
-        // =========================
         if (!row.work_id)
           errors.push(`Row ${i}: Missing work_id`);
       
@@ -472,9 +468,6 @@ buildFinalData() {
         if (!row.last_name)
           errors.push(`Row ${i}: Missing last_name`);
       
-        // =========================
-        // DUPLICATE CHECK
-        // =========================
         if (row.work_id) {
           if (seen.has(row.work_id)) {
             errors.push(`Row ${i}: Duplicate work_id (${row.work_id})`);
@@ -482,52 +475,40 @@ buildFinalData() {
           seen.add(row.work_id);
         }
       
-        // =========================
-        // DATE VALIDATION
-        // =========================
         if (row.valid_until && isNaN(Date.parse(row.valid_until))) {
           errors.push(`Row ${i}: Invalid valid_until date`);
         }
       
-        // =========================
-        // EMERGENCY CONTACT VALIDATION
-        // =========================
-        if (!row.emergency_name) {
-          errors.push(`Row ${i}: Missing emergency_name`);
-        }
-      
-        if (!row.emergency_cp) {
-          errors.push(`Row ${i}: Missing emergency_cp`);
-        } else {
-          // allow numbers, +, spaces, dashes
-          const phone = String(row.emergency_cp).replace(/\s+/g, "");
-          if (!/^[0-9+\-]{7,15}$/.test(phone)) {
-            errors.push(`Row ${i}: Invalid emergency_cp (${row.emergency_cp})`);
-          }
-        }
-      
-        if (!row.emergency_address) {
-          errors.push(`Row ${i}: Missing emergency_address`);
-        }
+        if (row.emergency_cp) {
+  const value = String(row.emergency_cp);
+
+  // ❌ reject ONLY if letters exist
+  if (/[a-zA-Z]/.test(value)) {
+    errors.push(`Row ${i}: Invalid emergency_cp (letters detected: ${row.emergency_cp})`);
+  }
+}
+
+
       });
     
       this.errors = errors;
     },
-
-
     matchPhotos() {
       let matched = 0;
       let missing = 0;
-
+    
       for (const row of this.simulatedData) {
         if (!row.photo_filename) continue;
-
-        const found = this.findMatchingPhoto(this.photoFilesMap, row.photo_filename);
-
+      
+        const found = this.findMatchingPhoto(
+          this.photoFilesMap,
+          row.photo_filename
+        );
+      
         if (found) matched++;
         else missing++;
       }
-
+    
       this.photoMatchSummary = { matched, missing };
     },
     findMatchingPhoto(photoMap, rawName) {
@@ -570,53 +551,51 @@ buildFinalData() {
 
       this.resetAll();
     },
-normalizeRegion(value) {
-  // Default region
-  const DEFAULT = "Region 10";
-
-  if (!value) return DEFAULT;
-
-  let v = String(value).trim().toUpperCase();
-
-  // Special regions (keep as-is)
-  const special = ["NCR", "CAR", "BARMM"];
-  if (special.includes(v)) return v;
-
-  // Roman → Number
-  const romanMap = {
-    I: 1,
-    II: 2,
-    III: 3,
-    IV: 4,
-    V: 5,
-    VI: 6,
-    VII: 7,
-    VIII: 8,
-    IX: 9,
-    X: 10,
-    XI: 11,
-    XII: 12,
-    XIII: 13
-  };
-
-  // Remove "REGION" text
-  v = v.replace(/^REGION\s*/i, "");
-
-  // Roman numeral input
-  if (romanMap[v]) {
-    return `Region ${romanMap[v]}`;
-  }
-
-  // Numeric input
-  if (/^\d+$/.test(v)) {
-    return `Region ${parseInt(v, 10)}`;
-  }
-
-  // Fallback
-  return DEFAULT;
-}
-
- 
+    normalizeRegion(value) {
+      // Default region
+      const DEFAULT = "Region 10";
+    
+      if (!value) return DEFAULT;
+    
+      let v = String(value).trim().toUpperCase();
+    
+      // Special regions (keep as-is)
+      const special = ["NCR", "CAR", "BARMM"];
+      if (special.includes(v)) return v;
+    
+      // Roman → Number
+      const romanMap = {
+        I: 1,
+        II: 2,
+        III: 3,
+        IV: 4,
+        V: 5,
+        VI: 6,
+        VII: 7,
+        VIII: 8,
+        IX: 9,
+        X: 10,
+        XI: 11,
+        XII: 12,
+        XIII: 13
+      };
+    
+      // Remove "REGION" text
+      v = v.replace(/^REGION\s*/i, "");
+    
+      // Roman numeral input
+      if (romanMap[v]) {
+        return `Region ${romanMap[v]}`;
+      }
+    
+      // Numeric input
+      if (/^\d+$/.test(v)) {
+        return `Region ${parseInt(v, 10)}`;
+      }
+    
+      // Fallback
+      return DEFAULT;
+    }
   },
 };
 </script>
