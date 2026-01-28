@@ -265,8 +265,11 @@ export default {
       showCardModal:false,
       cardPerson: null,
       supabase: null,
-      brokenImages: {},
+      hasImageError: {},
       people: [],
+      loading: false,
+      loadingProgress: 0,
+      fullyLoaded: false,
       search: "",
       filterRegion: "",
       filterChapter: "", 
@@ -362,19 +365,53 @@ filteredPeople() {
       return `${p.first_name} ${mi}${p.last_name}${suffix}`;
     },
     async loadPeople() {
-      const { data } = await this.supabase.from("people").select("*");
+      this.loading = true
+      this.loadingProgress = 0
 
-      if (data) {
-        this.people = data;
+      const pageSize = 1000
+      let from = 0
+      let all = []
 
-        this.regions = [...new Set(data.map((p) => p.region))].filter(Boolean);
-        this.designationList = [...new Set(data.map((p) => p.designation))].filter(Boolean);
-
-        this.chapterList = [...new Set(data.map(p => p.chapter))]
-          .filter(Boolean)
-          .sort();
+      try {
+        while (true) {
+          const { data, error } = await this.supabase
+            .from("people")
+            .select("*")
+            .order("id", { ascending: true })
+            .range(from, from + pageSize - 1)
+        
+          if (error) throw error
+          if (!data || data.length === 0) break
+        
+          all.push(...data)
+        
+          // 🔥 update UI progressively
+          this.people = [...all]
+        
+          // update progress (fake but useful UX)
+          this.loadingProgress += data.length
+        
+          if (data.length < pageSize) break
+          from += pageSize
+        
+          // 🧠 let UI breathe (VERY important)
+          await new Promise(r => setTimeout(r, 0))
+        }
+      
+        this.fullyLoaded = true
+      
+        // build filters ONCE (from full dataset)
+        this.regions = [...new Set(all.map(p => p.region))].filter(Boolean)
+        this.designationList = [...new Set(all.map(p => p.designation))].filter(Boolean)
+        this.chapterList = [...new Set(all.map(p => p.chapter))].filter(Boolean).sort()
+      
+      } catch (err) {
+        console.error("loadPeople failed:", err)
+      } finally {
+        this.loading = false
       }
     },
+
     nextPage() {
       if (this.currentPage < this.totalPages) this.currentPage++;
     },

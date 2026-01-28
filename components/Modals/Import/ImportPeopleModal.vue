@@ -480,15 +480,13 @@ export default {
         }
       
         if (row.emergency_cp) {
-  const value = String(row.emergency_cp);
-
-  // ❌ reject ONLY if letters exist
-  if (/[a-zA-Z]/.test(value)) {
-    errors.push(`Row ${i}: Invalid emergency_cp (letters detected: ${row.emergency_cp})`);
-  }
-}
-
-
+      const value = String(row.emergency_cp);
+            
+      // ❌ reject ONLY if letters exist
+      if (/[a-zA-Z]/.test(value)) {
+        errors.push(`Row ${i}: Invalid emergency_cp (letters detected: ${row.emergency_cp})`);
+      }
+    }
       });
     
       this.errors = errors;

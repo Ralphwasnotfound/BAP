@@ -170,11 +170,11 @@
           
             <!-- BULK ACTIONS -->
             <button
-              v-if="bulkMode && selectedRows.length > 0"
+              v-if="bulkMode && selectedRowIds.length > 0"
               class="btn-red flex items-center gap-2"
               @click="openBulkDeleteModal"
             >
-              Delete Selected ({{ selectedRows.length }})
+              Delete Selected ({{ selectedRowIds.length }})
             </button>
           
             <button
@@ -241,7 +241,6 @@
           </thead>
         
           <tbody :key="currentPage">
-            <transition-group name="tableFade" as="template" >
             <tr 
               v-for="p in filteredPeople" 
               :key="p.id"
@@ -257,7 +256,7 @@
                 >
                   <!-- NOT SELECTED -->
                   <svg 
-                    v-if="!selectedRows.includes(p)"
+                    v-if="!selectedRowIds.includes(p.id)"
                     xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="rgba(173,184,194,1)">
                     <path d="M4 3H20C20.5523 3 21 3.44772 21 4V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V4C3 3.44772 3.44772 3 4 3ZM5 5V19H19V5H5Z"/>
                   </svg>
@@ -366,7 +365,6 @@
               </td>
             
             </tr>
-            </transition-group>
           
             <!-- EMPTY MESSAGE -->
             <tr v-if="!people.length">
@@ -460,7 +458,7 @@
 
       <DeleteConfirm
         :show="showBulkDeleteModal"
-        :person="{ name: selectedRows.length + ' selected people' }"
+        :person="{ name: selectedRowIds.length + ' selected people' }"
         @close="showBulkDeleteModal = false"
         @confirm="bulkDelete"
       />
@@ -546,7 +544,7 @@ export default {
       newNotifications: [],
       selectedPerson: null,
       hasImageError: {},
-      selectedRows: [],
+      selectedRowIds: [],
       selectAll: false,
       bulkMode: false,
       showBulkDeleteModal: false,
@@ -609,19 +607,14 @@ export default {
       this.supabase = useSupabaseClient()
       await this.checkAdmin();
 
-      // Always load full people list FIRST
-      const allPeople = await this.loadAllPeople();
+      await this.loadPeople()
 
-      // Generate notifications from complete list
-      await this.checkExpirations(allPeople);
-
-      // Load UI paginated table
-      await this.loadPeople();
-
-      // Load notifications for popup
-      await this.refreshNotifications();
-
-      await this.checkMonthlyNotifications();
+      setTimeout(async () => {
+        this.allPeople = await this.loadAllPeople()
+        await this.checkExpirations(this.allPeople)
+        await this.refreshNotifications()
+        await this.checkMonthlyNotifications()
+      }, 0)
     },
     methods: {
       /* ---------------- Helpers ---------------- */
@@ -1224,9 +1217,9 @@ export default {
       },
       toggleSelectAll() {
         if (this.selectAll) {
-          this.selectedRows = [...this.people]
+          this.selectedRowIds = this.people.map(p => p.id)
         } else {
-          this.selectedRows = []
+          this.selectedRowIds = []
         }
       },
 
@@ -1235,53 +1228,61 @@ export default {
       },
 
       async bulkDelete() {
-        if (!this.checkConnection()) return;
+        if (!this.checkConnection()) return
 
-        this.loading = true;
-        this.loadingMessage = "Deleting selected people...";
+        this.loading = true
+        this.loadingMessage = "Deleting selected people..."
 
-      try {
-        const ids = this.selectedRows.map(p => p.id);
-        const workIds = this.selectedRows.map(p => p.work_id);
-
-        await this.supabase
-          .from("people")
-          .delete()
-          .in("id", ids);
-
-      // Activity log
-        await this.logActivity(
-          "bulkDelete",
-          `Bulk deleted ${ids.length} people`,
-          null,
-          {
-            total_deleted: ids.length,
-            work_ids: workIds
-          }
-        );
-
-        this.showNotification("Deleted!", `${ids.length} people removed.`, "error");
-
-        this.selectedRows = [];
-        this.selectAll = false;
-        this.showBulkDeleteModal = false;
-
-        await this.loadPeople();
-
-      } catch (err) {
-        console.error(err);
-        await this.logError("bulkDelete", err.message, { ids: this.selectedRows });
-
-        this.showNotification("Error", "Bulk delete failed.", "error");
-      }
-
-      this.loading = false;
+        try {
+          const ids = this.selectedRowIds
+        
+          if (!ids.length) return
+        
+          const selectedPeople = this.people.filter(p =>
+            ids.includes(p.id)
+          )
+        
+          const workIds = selectedPeople.map(p => p.work_id)
+        
+          await this.supabase
+            .from("people")
+            .delete()
+            .in("id", ids)
+        
+          await this.logActivity(
+            "bulkDelete",
+            `Bulk deleted ${ids.length} people`,
+            null,
+            {
+              total_deleted: ids.length,
+              work_ids: workIds
+            }
+          )
+          
+          this.showNotification(
+            "Deleted!",
+            `${ids.length} people removed.`,
+            "error"
+          )
+          
+          this.selectedRowIds = []
+          this.selectAll = false
+          this.showBulkDeleteModal = false
+          
+          await this.loadPeople()
+        } catch (err) {
+          console.error(err)
+          await this.logError("bulkDelete", err.message, { ids: this.selectedRowIds })
+          this.showNotification("Error", "Bulk delete failed.", "error")
+        } finally {
+          this.loading = false
+        }
       },
 
       cancelBulkMode() {
         this.bulkMode = false;
         this.selectAll = false;
-        this.selectedRows = [];
+        this.selectedRowIds = [];
       },
 
       async processBulkImport({ rows, photoFiles }) {
@@ -1493,33 +1494,30 @@ export default {
       },
 
       async checkExpirations(allPeople) {
+        const { data: existing } = await this.supabase
+          .from("notification_logs")
+          .select("person_id")
+
+        const existingIds = new Set((existing || []).map(n => n.person_id))
+
+        const inserts = []
+
         for (const p of allPeople) {
-          if (!p.valid_until) continue;
-        
-          const expiry = new Date(p.valid_until);
-          const expText = expiry.toLocaleString("en-US", { month: "long", year: "numeric" });
-        
-          // Permanent message
-          const message = `Membership valid until ${expText}.`;
-        
-          // Check if notification already exists for this person
-          const { data: existing } = await this.supabase
-            .from("notification_logs")
-            .select("id")
-            .eq("person_id", p.id)
-            .maybeSingle();
-        
-          // If exists → do NOT delete, do NOT create again
-          if (existing) continue;
-        
-          // Create only once (permanent)
-          await this.supabase.from("notification_logs").insert([
-            {
-              person_id: p.id,
-              message,
-              created_at: new Date()
-            }
-          ]);
+          if(!p.valid_until) continue
+          if(existingIds.has(p.id)) continue
+
+          const expiry = new Date(p.valid_until)
+          const expText = expiry.toLocaleString("en-US", {month: "long", year: "numeric"})
+
+          inserts.push({
+            person_id: p.id,
+            message: `Membership valid until ${expText}.`,
+            created_at: new Date()
+          })
+        }
+
+        if (inserts.length) {
+          await this.supabase.from("notification_logs").insert(inserts)
         }
       },
 
@@ -1692,11 +1690,13 @@ export default {
       },
 
       toggleSelect(person) {
-        const index = this.selectedRows.indexOf(person)
+        const id = person.id
+        const index = this.selectedRowIds.indexOf(id)
+
           if (index === -1) {
-          this.selectedRows.push(person)
+          this.selectedRowIds.push(id)
         } else {
-          this.selectedRows.splice(index, 1)
+          this.selectedRowIds.splice(index, 1)
         }
       },
 
@@ -1709,27 +1709,26 @@ export default {
         return `${p.last_name}, ${p.first_name} ${mi}${suffix}`.trim();
       },
 
-    async logAdminLogout() {
-      try {
-        const { data } = await this.supabase.auth.getSession()
-        const user = data?.session?.user
-        if (!user) return
-      
-        await this.supabase.from("activity_logs").insert([{
-          action: "adminLogout",
-          description: "Admin logged out",
-          person_id: null,        // ✅ IMPORTANT
-          admin_id: user.id,
-          metadata: {
-            email: user.email
-          },
-            created_at: new Date().toISOString()
-          }])
-        } catch (err) {
-          console.warn("Logout log skipped:", err)
+      async logAdminLogout() {
+        try {
+          const { data } = await this.supabase.auth.getSession()
+          const user = data?.session?.user
+          if (!user) return
+        
+          await this.supabase.from("activity_logs").insert([{
+            action: "adminLogout",
+            description: "Admin logged out",
+            person_id: null,        // ✅ IMPORTANT
+            admin_id: user.id,
+            metadata: {
+              email: user.email
+            },
+              created_at: new Date().toISOString()
+            }])
+          } catch (err) {
+            console.warn("Logout log skipped:", err)
+          }
         }
-      }   
-
       },
       computed: {
       asyncCriticalNotifications() {
@@ -1757,31 +1756,7 @@ export default {
       },
 
       filteredPeople() {
-        return this.people.filter(p => {
-          const q = this.searchQuery.toLowerCase()
-        
-          const matchesSearch =
-            !q ||
-            this.formatFullName(p).toLowerCase().includes(q) ||
-            p.work_id?.toLowerCase().includes(q)
-        
-          const matchesRegion =
-            !this.selectedRegion || p.region === this.selectedRegion
-        
-          const matchesDesignation =
-            !this.selectedDesignation || p.designation === this.selectedDesignation
-        
-          const matchesChapter =
-            !this.selectedChapter || p.chapter === this.selectedChapter
-        
-          // INCLUDE ALL CONDITIONS
-          return (
-            matchesSearch &&
-            matchesRegion &&
-            matchesDesignation &&
-            matchesChapter
-          )
-        })
+        return this.people
       }
     }
   }

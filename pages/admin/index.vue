@@ -206,9 +206,9 @@ export default {
       this.announcements = data || []
     },
     async loadStats() {
-      const { data } = await this.supabase
+      const { data, count } = await this.supabase
         .from("people")
-        .select("valid_until")
+        .select("valid_until", { count: "exact"})
 
       const people = data || []
 
@@ -216,12 +216,14 @@ export default {
       const soon = new Date()
       soon.setMonth(soon.getMonth() + 1)
 
-      this.stats.total = people.length
+      this.stats.total = count || 0
       this.stats.active = 0
       this.stats.expiring = 0
       this.stats.expired = 0
 
       people.forEach(p => {
+        if (!p.valid_until) return
+        
         const validUntil = new Date(p.valid_until)
         if (validUntil < today) this.stats.expired++
         else if (validUntil <= soon) this.stats.expiring++
