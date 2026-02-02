@@ -343,7 +343,7 @@
               <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate text-left">{{ p.work_id }}</td>
               <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate text-left">{{ p.region }}</td>
               <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate text-left">{{ p.designation }}</td>
-              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate text-left">{{ p.chapter }}</td>
+              <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate text-left">{{ formatChapter(p.chapter) }}</td>
               <td class="p-1 border max-w-[120px] sm:max-w-[150px] truncate text-left">{{ formatMonthYear(p.valid_until) }}</td>
             
               <!-- ACTION BUTTONS -->
@@ -660,7 +660,10 @@ export default {
         const d = new Date(value)
         return d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
       },
-
+      formatChapter(value) {
+        if (!value) return ''
+        return value.replace(/-(\w)/g, (_, c) => `-${c.toUpperCase()}`)
+      },
       checkConnection() {
         if (!navigator.onLine) {
           this.loading = false
