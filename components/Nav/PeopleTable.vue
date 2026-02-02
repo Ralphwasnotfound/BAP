@@ -186,7 +186,7 @@
               </td>
 
               <td class="p-2 border text-gray-700">{{ p.work_id }}</td>
-              <td class="p-2 border text-gray-700">{{ p.region }}</td>
+              <td class="p-2 border text-gray-700">{{ formatRegion(p.region)  }}</td>
               <td class="p-2 border text-gray-700">{{ p.designation }}</td>
               <td class="p-2 border text-gray-700">{{ p.chapter }}</td>
 
@@ -400,7 +400,13 @@ filteredPeople() {
         this.fullyLoaded = true
       
         // build filters ONCE (from full dataset)
-        this.regions = [...new Set(all.map(p => p.region))].filter(Boolean)
+        this.regions = [
+          ...new Set(
+            all
+              .map(p => this.formatRegion(p.region))
+              .filter(Boolean)
+          )
+        ].sort()
         this.designationList = [...new Set(all.map(p => p.designation))].filter(Boolean)
         this.chapterList = [...new Set(all.map(p => p.chapter))].filter(Boolean).sort()
       
@@ -479,6 +485,20 @@ filteredPeople() {
   if (diffMonths <= 2) return "expiring";
   return "valid";
 },
+
+formatRegion(region) {
+  if (!region) return "";
+
+  const r = region.trim();
+
+  // Force BARMM to uppercase
+  if (r.toLowerCase() === "barmm") {
+    return "BARMM";
+  }
+
+  return r;
+}
+
 
   },
 };
