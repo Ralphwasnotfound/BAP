@@ -261,9 +261,6 @@ export default {
       if (!this.localForm.region?.trim()) errors.region = "Region is required.";
       if (!this.localForm.work_id?.trim()) errors.work_id = "ID No. is required.";
 
-      if (!this.localForm.emergency_name?.trim()) errors.emergency_name = "Emergency contact name is required.";
-      if (!this.localForm.emergency_address?.trim()) errors.emergency_address = "Emergency address is required.";
-
       if (!this.validUntil.year || !this.validUntil.month)
         errors.valid_until = "Valid Until is required.";
 
