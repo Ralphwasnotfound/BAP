@@ -188,7 +188,7 @@
               <td class="p-2 border text-gray-700">{{ p.work_id }}</td>
               <td class="p-2 border text-gray-700">{{ formatRegion(p.region)  }}</td>
               <td class="p-2 border text-gray-700">{{ p.designation }}</td>
-              <td class="p-2 border text-gray-700">{{ p.chapter }}</td>
+              <td class="p-2 border text-gray-700">{{ formatChapter(p.chapter) }}</td>
 
               <td
                 class="p-2 border font-semibold"
@@ -308,12 +308,11 @@ filteredPeople() {
       !this.filterRegion ||
       this.formatRegion(p.region) === this.filterRegion;
 
-
     const matchesDesignation =
       !this.filterDesignation || p.designation === this.filterDesignation;
 
     const matchesChapter =
-      !this.filterChapter || p.chapter === this.filterChapter;
+      !this.filterChapter || this.formatChapter(p.chapter) === this.filterChapter;
 
     const status = this.getStatus(p.valid_until);
     const matchesStatus =
@@ -365,6 +364,11 @@ filteredPeople() {
       const suffix = p.suffix ? " " + p.suffix : "";
       return `${p.first_name} ${mi}${p.last_name}${suffix}`;
     },
+    formatChapter(chapter) {
+      if (!chapter) return "";
+      return chapter.replace(/-(\w)/g, (_, letter) => `-${letter.toUpperCase()}`);
+    },
+
     async loadPeople() {
       this.loading = true
       this.loadingProgress = 0
@@ -410,7 +414,13 @@ filteredPeople() {
           )
         ].sort()
         this.designationList = [...new Set(all.map(p => p.designation))].filter(Boolean)
-        this.chapterList = [...new Set(all.map(p => p.chapter))].filter(Boolean).sort()
+        this.chapterList = [
+          ...new Set(
+            all
+              .map(p => this.formatChapter(p.chapter))
+              .filter(Boolean)
+          )
+        ].sort()
       
       } catch (err) {
         console.error("loadPeople failed:", err)

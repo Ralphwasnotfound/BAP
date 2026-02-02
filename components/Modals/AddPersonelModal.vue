@@ -315,7 +315,13 @@ export default {
     },
     handleRegionInput() {
       let value = this.localForm.region.trim().toUpperCase();
-        
+      
+      // FORCE BARMM ALL CAPS
+  if (value.toLowerCase() === "barmm") {
+    this.localForm.region = "BARMM";
+    return;
+  }
+
       // SPECIAL REGIONS
       if (["NCR", "NATIONAL CAPITAL REGION"].includes(value)) {
         this.localForm.region = "NCR";
