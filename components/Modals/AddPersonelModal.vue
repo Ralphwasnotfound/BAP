@@ -263,14 +263,18 @@ export default {
 
       if (!this.localForm.emergency_name?.trim()) errors.emergency_name = "Emergency contact name is required.";
       if (!this.localForm.emergency_address?.trim()) errors.emergency_address = "Emergency address is required.";
-      if (!this.localForm.emergency_cp?.trim()) errors.emergency_cp = "Emergency contact number is required.";
 
       if (!this.validUntil.year || !this.validUntil.month)
         errors.valid_until = "Valid Until is required.";
 
-      if (this.localForm.emergency_cp && !/^[0-9]+$/.test(this.localForm.emergency_cp))
+      // Emergency contact number (OPTIONAL)
+      if (
+        this.localForm.emergency_cp &&
+        !/^[0-9]+$/.test(this.localForm.emergency_cp)
+      ) {
         errors.emergency_cp = "Must contain digits only.";
-
+      }
+        
       if (/\d/.test(this.localForm.first_name))
         errors.first_name = "First name cannot contain numbers.";
 
