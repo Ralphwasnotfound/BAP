@@ -305,7 +305,9 @@ filteredPeople() {
       .some((field) => (field || "").toLowerCase().includes(s));
 
     const matchesRegion =
-      !this.filterRegion || p.region === this.filterRegion;
+      !this.filterRegion ||
+      this.formatRegion(p.region) === this.filterRegion;
+
 
     const matchesDesignation =
       !this.filterDesignation || p.designation === this.filterDesignation;
