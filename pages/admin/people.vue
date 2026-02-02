@@ -86,108 +86,136 @@
             >
               Import CSV
             </button>
-          
+
+             <!-- BULK ACTIONS -->
+<button
+  v-if="bulkMode && selectedRowIds.length > 0"
+  class="btn-red block sm:hidden md:flex items-center gap-2 w-auto"
+  @click="openBulkDeleteModal"
+>
+  Delete Selected ({{ selectedRowIds.length }})
+</button>
+
+
+
+<button
+  v-if="bulkMode"
+  class="px-4 py-2 bg-gray-500 text-white
+         block sm:hidden md:flex
+         items-center gap-2 rounded"
+  @click="cancelBulkMode"
+>
+  Cancel
+</button>
+
           </div>
         </div>
       </div>
-
 
       <div class="flex flex-col gap-4 py-4">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full lg:w-auto">
-            <div class="relative w-full sm:w-64">
-              <input
-                v-model="searchQuery"
-                @input="handleSearch"
-                type="text"
-                placeholder="Search people..."
-                class="border px-4 py-2 rounded-full w-full pr-10"
-              />
-            
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="18"
-                height="18"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                fill="rgba(173,184,194,1)"
-              >
-                <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168Z"/>
-              </svg>
-            </div>
-          
-            <div
-              v-if="searchQuery.trim() && people.length > 0"
-              class="px-3 py-1 bg-gray-100 border rounded-full text-sm text-gray-400"
-            >
-              <span class="font-semibold">{{ people.length }}</span>
-              {{ people.length === 1 ? 'Item' : 'Items' }}
-            </div>
-          </div>
-        
-          <!-- RIGHT: FILTERS + BULK -->
-          <div class="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
-          
-            <!-- FILTERS -->
-            <select
-              v-model="selectedRegion"
-              class="border px-3 py-2 rounded-full text-sm text-gray-500"
-            >
-              <option value="">All Regions</option>
-              <option v-for="r in regions" :key="r" :value="r">
-                {{ r }}
-              </option>
-            </select>
-          
-            <select
-              v-model="selectedChapter"
-              class="border px-3 py-2 rounded-full text-sm text-gray-500"
-            >
-              <option value="">All Chapters</option>
-              <option v-for="c in chapters" :key="c" :value="c">
-                {{ c }}
-              </option>
-            </select>
 
-            <select
-              v-model="selectedDesignation"
-              class="border px-3 py-2 rounded-full text-sm text-gray-500"
-            >           
-              <option value="">All Designations</option>
-              <option v-for="d in designations" :key="d" :value="d">
-                {{ d }}
-              </option>
-            </select>
+  <!-- TOP ROW -->
+  <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
 
-          
-            <button
-              v-if="selectedRegion || selectedChapter"
-              @click="selectedRegion=''; selectedChapter=''"
-              class="px-3 py-2 text-sm rounded-full bg-gray-200 hover:bg-gray-300"
-            >
-              Clear
-            </button>
-          
-            <!-- BULK ACTIONS -->
-            <button
-              v-if="bulkMode && selectedRowIds.length > 0"
-              class="btn-red flex items-center gap-2"
-              @click="openBulkDeleteModal"
-            >
-              Delete Selected ({{ selectedRowIds.length }})
-            </button>
-          
-            <button
-              v-if="bulkMode"
-              class="px-4 py-2 bg-gray-500 text-white flex items-center gap-2 rounded"
-              @click="cancelBulkMode"
-            >
-              Cancel
-            </button>
-          
-          </div>
-        </div>
+    <!-- LEFT: SEARCH + COUNT -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full lg:max-w-md">
+      <div class="relative w-full">
+        <input
+          v-model="searchQuery"
+          @input="handleSearch"
+          type="text"
+          placeholder="Search people..."
+          class="border rounded-full px-4 py-2 w-full pr-10 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          fill="rgba(173,184,194,1)"
+        >
+          <path d="M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168Z"/>
+        </svg>
       </div>
+
+      <div
+        v-if="searchQuery.trim() && people.length > 0"
+        class="px-3 py-1 bg-gray-100 border rounded-full text-sm text-gray-400 whitespace-nowrap"
+      >
+        <span class="font-semibold">{{ people.length }}</span>
+        {{ people.length === 1 ? 'Item' : 'Items' }}
+      </div>
+    </div>
+
+    <!-- RIGHT: FILTERS + BULK -->
+    <div class="grid grid-cols-1 md:grid-cols-3 sm:grid-cols-3 lg:grid-cols-[auto_auto_auto_auto] gap-2 justify-start lg:justify-end">
+
+      <!-- FILTERS -->
+      <select
+        v-model="selectedRegion"
+        class="border rounded-full px-4 py-2 text-sm text-gray-500 w-full sm:w-40"
+      >
+        <option value="">All Regions</option>
+        <option v-for="r in regions" :key="r" :value="r">
+          {{ r }}
+        </option>
+      </select>
+
+      <select
+        v-model="selectedChapter"
+        class="border rounded-full px-4 py-2 text-sm text-gray-500 w-full sm:w-40"
+      >
+        <option value="">All Chapters</option>
+        <option v-for="c in chapters" :key="c" :value="c">
+          {{ c }}
+        </option>
+      </select>
+
+      <select
+  v-model="selectedDesignation"
+  :title="selectedDesignation || 'All Designations'"
+  class="border rounded-full px-4 py-2 text-sm text-gray-500 truncate
+         w-full sm:w-40 md:w-44 lg:w-48"
+>
+  <option value="">All Designations</option>
+  <option v-for="d in designations" :key="d" :value="d">
+    {{ d }}
+  </option>
+</select>
+
+
+      <!-- CLEAR -->
+      <button
+        v-if="selectedRegion || selectedChapter || selectedDesignation"
+        @click="selectedRegion=''; selectedChapter=''; selectedDesignation=''"
+        class="px-3 py-2 text-sm rounded-full bg-gray-200 hover:bg-gray-300 w-full sm:w-auto"
+      >
+        Clear
+      </button>
+
+      <!-- BULK ACTIONS -->
+      <button
+        v-if="bulkMode && selectedRowIds.length > 0"
+        class="btn-red flex items-center gap-2 w-full sm:w-auto lg:hidden md:hidden"
+        @click="openBulkDeleteModal"
+      >
+        Delete Selected ({{ selectedRowIds.length }})
+      </button>
+
+      <button
+        v-if="bulkMode"
+        class="px-4 py-2 bg-gray-500 text-white flex items-center gap-2 rounded w-full sm:w-auto lg:hidden md:hidden"
+        @click="cancelBulkMode"
+      >
+        Cancel
+      </button>
+
+    </div>
+  </div>
+</div>
 
 
       <!-- TABLE -->
@@ -242,7 +270,7 @@
         
           <tbody :key="currentPage">
             <tr 
-              v-for="p in filteredPeople" 
+              v-for="p in people" 
               :key="p.id"
               @click="openPersonCard(p)"
               class="cursor-pointer hover:bg-gray-50 text-xs font-medium"
@@ -618,6 +646,13 @@ export default {
     },
     methods: {
       /* ---------------- Helpers ---------------- */
+      clearFilters() {
+        this.selectedRegion = ''
+        this.selectedChapter = ''
+        this.selectedDesignation = ''
+        this.currentPage = 1
+        this.loadPeople()
+      },
       formatFullName(p) {
         if (!p) return ''
         const mi = p.middle_initial ? p.middle_initial + '. ' : ''
@@ -732,7 +767,6 @@ export default {
             .from('people')
             .select('*', { count: 'exact' })
             .order('id', { ascending: false })
-            .range(from, to)
 
           if (this.searchQuery.trim()) {
             const s = this.searchQuery.trim()
@@ -741,11 +775,31 @@ export default {
             )
           }
 
-          const { data, count, error } = await this.timeoutPromise(query, 10000)
+          if (this.selectedRegion) {
+            query = query.eq('region', this.selectedRegion)
+          }
+
+          if (this.selectedChapter) {
+            query = query.eq('chapter', this.selectedChapter)
+          }
+
+          if (this.selectedDesignation) {
+            query = query.eq('designation', this.selectedDesignation)
+          }
+
+          const { data, count, error } = await this.timeoutPromise(
+            query.range(from, to),
+            10000
+          )
+
           if (error) throw error
 
+
           this.people = data || []
+          this.selectAll = false
+          this.selectedRowIds = []
           this.totalPages = Math.max(1, Math.ceil((count || this.people.length) / this.pageSize))
+
         } catch (err) {
           console.error('loadPeople', err)
           await this.logError('loadPeople', err.message || String(err))
@@ -758,6 +812,10 @@ export default {
 
       handleSearch() {
         this.currentPage = 1
+
+        if (!this.searchQuery.trim()) {
+          this.currentPage = 1
+        }
 
         clearTimeout(this.searchDebounce)
         this.searchDebounce = setTimeout(() => {
@@ -1739,13 +1797,13 @@ export default {
       },
       regions() {
         return [...new Set(
-          (this.people || []).map(p => p.region).filter(Boolean)
+          (this.allPeople || []).map(p => p.region).filter(Boolean)
         )].sort()
       },
 
       chapters() {
         return [...new Set(
-          (this.people || []).map(p => p.chapter).filter(Boolean)
+          (this.allPeople || []).map(p => p.chapter).filter(Boolean)
         )].sort()
       },
 
@@ -1754,9 +1812,19 @@ export default {
           (this.allPeople || []).map(p => p.designation).filter(Boolean)
         )].sort()
       },
-
-      filteredPeople() {
-        return this.people
+    },
+    watch: {
+      selectedRegion() {
+        this.currentPage = 1
+        this.loadPeople()
+      },
+      selectedChapter() {
+        this.currentPage = 1
+        this.loadPeople()
+      },
+      selectedDesignation() {
+        this.currentPage = 1
+        this.loadPeople()
       }
     }
   }
@@ -1807,6 +1875,5 @@ export default {
   opacity: 0;
   transform: translateY(-6px);
 }
-
 
 </style>

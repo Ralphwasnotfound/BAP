@@ -1,6 +1,6 @@
 <template>
     <div>
-        This is the Contact
+        BAP President
     </div>
 </template>
 
