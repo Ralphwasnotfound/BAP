@@ -31,7 +31,7 @@
       <!-- STATUS FILTER -->
       <div class="flex gap-2 flex-wrap">
         <button
-          class="px-3 py-1 rounded-full text-sm border"
+          class="px-3 py-1 rounded-full text-[10px] border"
           :class="statusFilter === '' ? 'bg-gray-100 text-gray-500' : ''"
           @click="statusFilter = ''"
         >
@@ -39,7 +39,7 @@
         </button>
       
         <button
-          class="px-3 py-1 rounded-full text-sm border bg-green-300 text-green-800"
+          class="px-3 py-1 rounded-full text-[10px] border bg-green-300 text-green-800"
           :class="statusFilter === 'valid' ? 'ring-2 ring-green-400' : ''"
           @click="statusFilter = 'valid'"
         >
@@ -47,7 +47,7 @@
         </button>
       
         <button
-          class="px-3 py-1 rounded-full text-sm border bg-yellow-300 text-yellow-800"
+          class="px-3 py-1 rounded-full text-[10px] border bg-yellow-300 text-yellow-800"
           :class="statusFilter === 'expiring' ? 'ring-2 ring-yellow-400' : ''"
           @click="statusFilter = 'expiring'"
         >
@@ -55,7 +55,7 @@
         </button>
       
         <button
-          class="px-3 py-1 rounded-full text-sm border bg-red-300 text-red-800"
+          class="px-3 py-1 rounded-full text-[10px] border bg-red-300 text-red-800"
           :class="statusFilter === 'expired' ? 'ring-2 ring-red-400' : ''"
           @click="statusFilter = 'expired'"
         >
@@ -87,41 +87,40 @@
       </div>
 
       <!-- REGION -->
-      <div class="flex flex-row gap-2">
-      <select
-        v-model="filterRegion"
-        class="border rounded-full px-4 py-2 text-sm w-full md:w-44
-               focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
-      >
-        <option value="">All Regions</option>
-        <option v-for="r in regions" :key="r" :value="r">{{ r }}</option>
-      </select>
+      <div class="grid grid-gols-1 sm:grid-cols-3 gap-2">
+        <select
+          v-model="filterRegion"
+          class="border rounded-full px-4 py-2 text-sm w-full md:w-44
+                 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
+        >
+          <option value="">All Regions</option>
+          <option v-for="r in regions" :key="r" :value="r">{{ r }}</option>
+        </select>
 
       <!-- CHAPTER ✅ -->
-  <select
-    v-model="filterChapter"
-    class="border rounded-full px-4 py-2 text-sm w-full md:w-44
-           focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
-  >
-    <option value="">All Chapters</option>
-    <option v-for="c in chapterList" :key="c" :value="c">
-      {{ c }}
-    </option>
-  </select>
+        <select
+          v-model="filterChapter"
+          class="border rounded-full px-4 py-2 text-sm w-full md:w-44
+                 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
+        >
+          <option value="">All Chapters</option>
+          <option v-for="c in chapterList" :key="c" :value="c">
+            {{ c }}
+          </option>
+        </select>
 
-      <!-- DESIGNATION -->
-      <select
-        v-model="filterDesignation"
-        class="border rounded-full px-4 py-2 text-sm w-full md:w-40
-               focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
-      >
-        <option value="">Designation</option>
-        <option v-for="t in designationList" :key="t" :value="t">
-          {{ t }}
-        </option>
-      </select>
+        <!-- DESIGNATION -->
+        <select
+          v-model="filterDesignation"
+          class="border rounded-full px-4 py-2 text-sm w-full md:w-40
+                 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-500"
+        >
+          <option value="">Designation</option>
+          <option v-for="t in designationList" :key="t" :value="t">
+            {{ t }}
+          </option>
+        </select>
       </div>
-
     </div>
 
     <!-- TABLE WRAPPER -->
