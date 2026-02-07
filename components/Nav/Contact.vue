@@ -7,7 +7,7 @@
       alt="Background Logo"
       class="
         absolute inset-0 m-auto
-        w-[300px] sm:w-[450px] md:w-[600px] lg:w-[700px]
+        w-[500px] sm:w-[450px] md:w-[600px] lg:w-[700px]
         opacity-10 pointer-events-none
       "
     />
@@ -46,7 +46,7 @@
       <div class="space-y-4">
         <!-- Gmail -->
         <a
-          href="mailto:yourgmail@gmail.com"
+          href="mailto:bapfederation@gmail.com"
           class="
             flex items-center gap-4
             p-3 sm:p-4
@@ -69,14 +69,14 @@
           <div>
             <p class="font-semibold text-gray-700">Gmail</p>
             <p class="text-xs sm:text-sm text-gray-500">
-              yourgmail@gmail.com
+              bapfederation@gmail.com
             </p>
           </div>
         </a>
 
         <!-- Facebook -->
         <a
-          href="https://facebook.com/yourprofile"
+          href="#"
           target="_blank"
           class="
             flex items-center gap-4
@@ -84,6 +84,7 @@
             border rounded-xl
             bg-blue-100 hover:bg-blue-200
             transition
+            cursor-not-allowed
           "
         >
           <svg
@@ -100,7 +101,7 @@
           <div>
             <p class="font-semibold text-gray-700">Facebook</p>
             <p class="text-xs sm:text-sm text-gray-500">
-              facebook.com/yourprofile
+              Coming Soon
             </p>
           </div>
         </a>
